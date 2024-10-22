@@ -2,7 +2,7 @@ import logging
 import time
 from datetime import datetime, timedelta
 
-from notetool.tool.log import logger
+logger = logging.getLogger("funutil")
 
 logger.setLevel(logging.DEBUG)
 
@@ -13,16 +13,11 @@ _MINUTE_SECOND = 60
 
 
 class WorkTime:
-
     def __init__(self):
         pass
 
     @staticmethod
-    def time_to_end(time_str=None,
-                    format_str="%Y-%m-%d %H:%M:%S",
-                    circle_time=_DAY_SECOND,
-                    threshold_time=60
-                    ):
+    def time_to_end(time_str=None, format_str="%Y-%m-%d %H:%M:%S", circle_time=_DAY_SECOND, threshold_time=60):
         if time_str is None:
             unix = int(time.mktime(datetime.datetime.now().timetuple()))
         elif isinstance(time_str, int) or isinstance(time_str, float):
@@ -35,7 +30,7 @@ class WorkTime:
 
         second_mod = unix % circle_time
         if second_mod > _DAY_SECOND - threshold_time:
-            logger.debug('time to end')
+            logger.debug("time to end")
             return True
         return False
 
@@ -75,7 +70,7 @@ def now2unix():
     return int(time.mktime(time.localtime()))
 
 
-def now2time(time_type='%Y-%m-%d %H:%M:%S'):
+def now2time(time_type="%Y-%m-%d %H:%M:%S"):
     """
     当前时间
     :return:
@@ -83,7 +78,7 @@ def now2time(time_type='%Y-%m-%d %H:%M:%S'):
     return time.strftime(time_type, time.localtime())
 
 
-def time2unix(time_str, time_type='%Y-%m-%d %H:%M:%S'):
+def time2unix(time_str, time_type="%Y-%m-%d %H:%M:%S"):
     """
     > str2unix('2013-10-10 23:40:00')
 
@@ -95,7 +90,7 @@ def time2unix(time_str, time_type='%Y-%m-%d %H:%M:%S'):
     return int(time.mktime(time.strptime(time_str, time_type)))
 
 
-def unix2time(time_stamp, time_type='%Y-%m-%d %H:%M:%S'):
+def unix2time(time_stamp, time_type="%Y-%m-%d %H:%M:%S"):
     return time.strftime(time_type, time.localtime(time_stamp))
 
 

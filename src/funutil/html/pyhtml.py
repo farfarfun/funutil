@@ -6,47 +6,46 @@ from types import GeneratorType
 
 import six
 
-if sys.version_info[0] >= 3:
-    from typing import Dict, List
-
 # The list will be extended by register_all function.
-__all__ = 'Tag Block Safe Var SelfClosingTag html script style form'.split()
+__all__ = "Tag Block Safe Var SelfClosingTag html script style form".split()
 
-tags = 'head body title div p h1 h2 h3 h4 h5 h6 u b i s a em strong span ' \
-       'font del_ ins ul ol li dd dt dl article section nav aside header ' \
-       'footer audio video object_ embed param fieldset legend button ' \
-       'textarea label select option table thead tbody tr th td caption ' \
-       'blockquote cite q abbr acronym address'
+tags = (
+    "head body title div p h1 h2 h3 h4 h5 h6 u b i s a em strong span "
+    "font del_ ins ul ol li dd dt dl article section nav aside header "
+    "footer audio video object_ embed param fieldset legend button "
+    "textarea label select option table thead tbody tr th td caption "
+    "blockquote cite q abbr acronym address"
+)
 
-self_closing_tags = 'meta link br hr input_ img'
+self_closing_tags = "meta link br hr input_ img"
 
-whitespace_sensitive_tags = 'code samp pre var kbd dfn'
+whitespace_sensitive_tags = "code samp pre var kbd dfn"
 
 INDENT = 2
 
 
 def _escape(text):
     r = (
-        ('&', '&amp;'),
-        ('<', '&lt;'),
-        ('>', '&gt;'),
-        ('"', '&quot;'),
-        ("'", '&#x27;'),)
+        ("&", "&amp;"),
+        ("<", "&lt;"),
+        (">", "&gt;"),
+        ('"', "&quot;"),
+        ("'", "&#x27;"),
+    )
     for k, v in r:
         text = text.replace(k, v)
     return text
 
 
 class TagMeta(type):
-    """Type of the Tag. (type(Tag) == TagMeta)
-    """
+    """Type of the Tag. (type(Tag) == TagMeta)"""
 
     def __str__(cls):
         """Renders as empty tag."""
         if cls.self_closing:
-            return '<%s/>' % cls.__name__
+            return "<%s/>" % cls.__name__
         else:
-            return '<%s></%s>' % (cls.__name__, cls.__name__)
+            return "<%s></%s>" % (cls.__name__, cls.__name__)
 
     def __repr__(cls):
         return cls.__name__
@@ -54,7 +53,6 @@ class TagMeta(type):
 
 @six.python_2_unicode_compatible
 class Tag(six.with_metaclass(TagMeta, object)):  # type: ignore
-
     safe = False  # do not escape while rendering
     self_closing = False
     whitespace_sensitive = False
@@ -62,12 +60,12 @@ class Tag(six.with_metaclass(TagMeta, object)):  # type: ignore
     doctype = None  # type: str
 
     def __init__(self, *children, **attributes):
-        _safe = attributes.pop('_safe', None)
+        _safe = attributes.pop("_safe", None)
         if _safe is not None:
             self.safe = _safe
 
         # Only children or attributes may be set at a time.
-        assert ((bool(children) ^ bool(attributes)) or (not children and not attributes))
+        assert (bool(children) ^ bool(attributes)) or (not children and not attributes)
 
         if self.self_closing and children:
             raise Exception("Self closing tag can't have children")
@@ -84,7 +82,7 @@ class Tag(six.with_metaclass(TagMeta, object)):  # type: ignore
         if self.self_closing:
             raise Exception("Self closing tag can't have children")
 
-        _safe = options.pop('_safe', None)
+        _safe = options.pop("_safe", None)
         if _safe is not None:
             self.safe = _safe
 
@@ -103,10 +101,10 @@ class Tag(six.with_metaclass(TagMeta, object)):  # type: ignore
             return "%s()" % self.name
 
     def _repr_attributes(self):
-        return ', '.join("%s=%r" % (key, value) for key, value in six.iteritems(self.attributes))
+        return ", ".join("%s=%r" % (key, value) for key, value in six.iteritems(self.attributes))
 
     def _repr_children(self):
-        return ', '.join(repr(child) for child in self.children)
+        return ", ".join(repr(child) for child in self.children)
 
     def __str__(self):
         return self.render()
@@ -120,45 +118,44 @@ class Tag(six.with_metaclass(TagMeta, object)):  # type: ignore
 
     def render(self, _out=None, _indent=0, **context):
         if _out is None:
-            _out = six.StringIO(u'')
+            _out = six.StringIO("")
 
         # Write doctype
         if self.doctype:
-            _out.write(' ' * _indent)
+            _out.write(" " * _indent)
             _out.write(self.doctype)
-            _out.write('\n')
+            _out.write("\n")
 
         # Indent opening tag
-        _out.write(' ' * _indent)
+        _out.write(" " * _indent)
 
         # Open tag
-        _out.write('<%s' % self.name)
+        _out.write("<%s" % self.name)
 
         self._write_attributes(_out, context)
 
         if self.self_closing:
-            _out.write('/>')
+            _out.write("/>")
         else:
             # Close opening tag
-            _out.write('>')
+            _out.write(">")
 
             if self.children:
                 # Newline after opening tag
                 if not self.whitespace_sensitive:
-                    _out.write('\n')
+                    _out.write("\n")
 
                 # Write content
-                self._write_list(self.children, _out, context,
-                                 _indent + INDENT)
+                self._write_list(self.children, _out, context, _indent + INDENT)
 
                 if not self.whitespace_sensitive:
                     # Newline after content
-                    _out.write('\n')
+                    _out.write("\n")
                     # Indent closing tag
-                    _out.write(' ' * _indent)
+                    _out.write(" " * _indent)
 
             # Write closing tag
-            _out.write('</%s>' % self.name)
+            _out.write("</%s>" % self.name)
 
         return _out.getvalue()
 
@@ -166,7 +163,7 @@ class Tag(six.with_metaclass(TagMeta, object)):  # type: ignore
         for i, child in enumerate(l):
             # Write newline between items
             if i != 0 and not self.whitespace_sensitive:
-                out.write('\n')
+                out.write("\n")
 
             self._write_item(child, out, context, indent)
 
@@ -185,9 +182,9 @@ class Tag(six.with_metaclass(TagMeta, object)):  # type: ignore
 
     def _write_as_string(self, s, out, indent, escape=True):
         if isinstance(s, six.text_type) and not isinstance(out, six.StringIO):
-            s = s.encode('utf-8')
+            s = s.encode("utf-8")
         elif s is None:
-            s = ''
+            s = ""
         elif not isinstance(s, six.string_types):
             s = str(s)
 
@@ -198,7 +195,7 @@ class Tag(six.with_metaclass(TagMeta, object)):  # type: ignore
         if not self.whitespace_sensitive:
             lines = s.splitlines(True)
             for line in lines:
-                out.write(' ' * indent)
+                out.write(" " * indent)
                 out.write(line)
         else:
             out.write(s)
@@ -208,18 +205,17 @@ class Tag(six.with_metaclass(TagMeta, object)):  # type: ignore
             # Some attribute names such as "class" conflict
             # with reserved keywords in Python. These must
             # be postfixed with underscore by user.
-            if key.endswith('_'):
-                key = key.rstrip('_')
+            if key.endswith("_"):
+                key = key.rstrip("_")
 
             # Dash is preffered to underscore in attribute names.
-            key = key.replace('_', '-')
+            key = key.replace("_", "-")
 
             if callable(value):
                 value = value(context)
 
-            if isinstance(value, six.text_type) and not isinstance(
-                    out, six.StringIO):
-                value = value.encode('utf-8')
+            if isinstance(value, six.text_type) and not isinstance(out, six.StringIO):
+                value = value.encode("utf-8")
 
             if not isinstance(value, six.string_types):
                 value = str(value)
@@ -257,13 +253,13 @@ class Block(Tag):
 
     def __repr__(self):
         if not self.children:
-            return 'Block(%r)' % self.block_name
+            return "Block(%r)" % self.block_name
         else:
-            return 'Block(%r)(%s)' % (self.block_name, self._repr_children())
+            return "Block(%r)(%s)" % (self.block_name, self._repr_children())
 
     def render(self, _out=None, _indent=0, **context):
         if _out is None:
-            _out = six.StringIO(u'')
+            _out = six.StringIO("")
 
         self._write_list(self.children, _out, context, _indent)
         return _out.getvalue()
@@ -293,20 +289,20 @@ class WhitespaceSensitiveTag(Tag):
 
 
 class html(Tag):
-    doctype = '<!DOCTYPE html>'
+    doctype = "<!DOCTYPE html>"
 
 
 class script(Tag):
     safe = True
-    default_attributes = {'type': 'text/javascript'}
+    default_attributes = {"type": "text/javascript"}
 
 
 class style(Tag):
-    default_attributes = {'type': 'text/css'}
+    default_attributes = {"type": "text/css"}
 
 
 class form(Tag):
-    default_attributes = {'method': 'POST'}
+    default_attributes = {"method": "POST"}
 
 
 _M = sys.modules[__name__]
@@ -315,7 +311,7 @@ _M = sys.modules[__name__]
 def register_all(tags, parent):
     for tag in tags.split():
         __all__.append(tag)
-        setattr(_M, tag, type(tag, (parent,), {'name': tag.rstrip('_')}))
+        setattr(_M, tag, type(tag, (parent,), {"name": tag.rstrip("_")}))
 
 
 register_all(tags, Tag)
@@ -325,4 +321,4 @@ register_all(whitespace_sensitive_tags, WhitespaceSensitiveTag)
 if __name__ == "__main__":
     import doctest
 
-    doctest.testmod(extraglobs={'print_function': print_function})  # type: ignore
+    doctest.testmod(extraglobs={"print_function": print_function})  # type: ignore

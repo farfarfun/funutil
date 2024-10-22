@@ -1,7 +1,8 @@
+import logging
 import os
 import shutil
 
-from notetool.log import logger
+logger = logging.getLogger("funutil")
 
 
 def info(msg):
@@ -25,7 +26,7 @@ def path_parse(path):
         return path
     # ~处理
     path = os.path.expanduser(path)
-    if not path.startswith('/'):
+    if not path.startswith("/"):
         return os.path.join(os.getcwd(), path)
     return path
 
@@ -40,19 +41,19 @@ def join_path(child_path, parent_path=None):
 
 def delete_file(file_path):
     if exists_file(file_path):
-        info('file exist and delete')
+        info("file exist and delete")
         os.remove(file_path)
 
 
 def exists_dir(file_dir, mkdir=False):
-    return exists(file_dir=file_dir, mkdir=mkdir, mode='path')
+    return exists(file_dir=file_dir, mkdir=mkdir, mode="path")
 
 
 def exists_file(file_path, mkdir=False):
-    return exists(file_path=file_path, mkdir=mkdir, mode='file')
+    return exists(file_path=file_path, mkdir=mkdir, mode="file")
 
 
-def exists(file_path=None, file_dir=None, file_name=None, mode='file', mkdir=False):
+def exists(file_path=None, file_dir=None, file_name=None, mode="file", mkdir=False):
     """
     文件或者目录是否存在，不存在是否需要新建
     :param file_path: 文件路径
@@ -66,7 +67,7 @@ def exists(file_path=None, file_dir=None, file_name=None, mode='file', mkdir=Fal
     file_path = path_parse(file_path)
     file_dir = path_parse(file_dir)
 
-    if mode == 'file':
+    if mode == "file":
         if file_path is not None:
             file_dir, file_name = os.path.split(file_path)
         elif file_dir is not None and file_name is not None:
@@ -84,7 +85,7 @@ def exists(file_path=None, file_dir=None, file_name=None, mode='file', mkdir=Fal
             makedirs(file_dir)
         return False
 
-    elif mode == 'path':
+    elif mode == "path":
         if file_path is not None:
             file_dir, file_name = os.path.split(file_path)
         elif file_dir is None:
@@ -129,11 +130,11 @@ def meta(file_dir, file_name=None, deep=1):
     :return:文件信息
     """
     return {
-        'dir': file_dir,
-        'name': file_name,
-        'path': file_dir if file_name is None else os.path.join(file_dir, file_name),
-        'isdir': True if file_name is None else False,
-        'deep': deep
+        "dir": file_dir,
+        "name": file_name,
+        "path": file_dir if file_name is None else os.path.join(file_dir, file_name),
+        "isdir": True if file_name is None else False,
+        "deep": deep,
     }
 
 
@@ -161,14 +162,14 @@ def merge_file(source_file, target_file):
 
     info("开始。。。。。")
 
-    with open(target_file, 'w+') as write_file:
+    with open(target_file, "w+") as write_file:
         for file_path in source_file:
-            with open(file_path, 'r') as f_source:
+            with open(file_path, "r") as f_source:
                 for line in f_source:
                     write_file.write(line)
-            write_file.write('\n')
+            write_file.write("\n")
 
-    info('done ' + str(flag) + '\t' + target_file)
+    info("done " + str(flag) + "\t" + target_file)
     info("完成。。。。。")
 
 
@@ -180,23 +181,23 @@ def split_file(source_file, target_dir, max_line=2000000):
     info("开始。。。。。")
 
     def get_filename():
-        return str(target_dir) + file_name + '-split-' + str(name) + '.csv'
+        return str(target_dir) + file_name + "-split-" + str(name) + ".csv"
 
-    write_file = open(get_filename(), 'w+')
+    write_file = open(get_filename(), "w+")
 
-    with open(source_file, 'r') as f_source:
+    with open(source_file, "r") as f_source:
         for line in f_source:
             flag += 1
 
             write_file.write(line)
 
             if flag == max_line:
-                info('done ' + str(flag) + '\t' + get_filename())
+                info("done " + str(flag) + "\t" + get_filename())
                 name += 1
                 flag = 0
 
                 write_file.close()
-                write_file = open(get_filename(), 'w+')
+                write_file = open(get_filename(), "w+")
     write_file.close()
-    info('done ' + str(flag) + '\t' + get_filename())
+    info("done " + str(flag) + "\t" + get_filename())
     info("完成。。。。。")

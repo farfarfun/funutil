@@ -1,1 +1,0 @@
-from notetool.log import *
