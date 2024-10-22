@@ -1,10 +1,10 @@
 import json
 import time
+from datetime import datetime
 from functools import wraps
 
 
 class CacheDump:
-
     def __init__(self, elapsed=10, file_path="dump.json"):
         """
         :param elapsed: time to dump the cache
@@ -22,8 +22,9 @@ class CacheDump:
         if time.time() - self.last_dump_time < self.elapsed:
             return
 
-        with open(self.file_path, 'w', encoding='utf-8') as out_data:
-            out_data.write(json.dumps(self.dump_data, indent=4, sort_keys=True))
+        dump_data = {"data": self.dump_data, "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+        with open(self.file_path, "w", encoding="utf-8") as out_data:
+            out_data.write(json.dumps(dump_data, indent=4, sort_keys=True))
         self.last_dump_time = time.time()
 
 
@@ -46,7 +47,7 @@ class RunTimer:
         self.counter += 1
 
     def __str__(self):
-        return f'{self.counter}, {self.elapsed / self.counter}s'
+        return f"{self.counter}, {self.elapsed / self.counter}s"
 
     @property
     def running(self) -> bool:
@@ -59,8 +60,8 @@ class RunTimer:
         if self.dump:
             key = f"{func.__code__.co_flags}-{func.__name__}"
             value = {
-                'counter': self.counter,
-                'elapsed': self.elapsed,
+                "counter": self.counter,
+                "elapsed": self.elapsed,
                 "average": self.elapsed / self.counter,
             }
             self.cache_dump.add(key, value)
@@ -68,6 +69,7 @@ class RunTimer:
 
     def __call__(self, func=None, *args, **kwargs):
         if func is not None:
+
             @wraps(func)
             def wrapper(*args2, **kwargs2):
                 self.wrap(func, args2, kwargs2)
