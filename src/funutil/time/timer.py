@@ -5,25 +5,25 @@ from functools import wraps
 
 
 class CacheDump:
-    def __init__(self, elapsed=10, file_path="dump.json"):
+    def __init__(self, elapsed=10):
         """
         :param elapsed: time to dump the cache
         """
         self.dump_data = {}
-        self.file_path = file_path
         self.elapsed = elapsed
         self.last_dump_time = time.time()
 
-    def add(self, key, value):
+    def add(self, key, value, dump_file=None):
         self.dump_data[key] = value
-        self.dump()
+        self.dump(dump_file)
 
-    def dump(self):
+    def dump(self, dump_file=None):
+        if dump_file is None:
+            return
         if time.time() - self.last_dump_time < self.elapsed:
             return
-
         dump_data = {"data": self.dump_data, "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
-        with open(self.file_path, "w", encoding="utf-8") as out_data:
+        with open(dump_file, "w", encoding="utf-8") as out_data:
             out_data.write(json.dumps(dump_data, indent=4, sort_keys=True))
         self.last_dump_time = time.time()
 
@@ -31,12 +31,30 @@ class CacheDump:
 class RunTimer:
     cache_dump = CacheDump(elapsed=3)
 
-    def __init__(self, time_func=time.perf_counter, dump=False):
+    def __init__(self, time_func=time.perf_counter, dump_file=None):
         self.counter = 0
         self.elapsed = 0
-        self.dump = dump
+        self.dump_file = dump_file
         self.time_func = time_func
         self.time_snapshot = None
+
+    def __call__(self, func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            self.start()
+            res = func(*args, **kwargs)
+            self.stop()
+            if self.dump_file is not None:
+                key = f"{func.__code__.co_flags}-{func.__name__}"
+                value = {
+                    "counter": self.counter,
+                    "elapsed": self.elapsed,
+                    "average": self.elapsed / self.counter,
+                }
+                self.cache_dump.add(key, value, dump_file=self.dump_file)
+            return res
+
+        return wrapper
 
     def start(self):
         self.time_snapshot = time.time()
@@ -52,29 +70,6 @@ class RunTimer:
     @property
     def running(self) -> bool:
         return self.time_snapshot is not None
-
-    def wrap(self, func, *args, **kwargs):
-        self.start()
-        res = func(*args, **kwargs)
-        self.stop()
-        if self.dump:
-            key = f"{func.__code__.co_flags}-{func.__name__}"
-            value = {
-                "counter": self.counter,
-                "elapsed": self.elapsed,
-                "average": self.elapsed / self.counter,
-            }
-            self.cache_dump.add(key, value)
-        return res
-
-    def __call__(self, func=None, *args, **kwargs):
-        if func is not None:
-
-            @wraps(func)
-            def wrapper(*args2, **kwargs2):
-                self.wrap(func, args2, kwargs2)
-
-            return wrapper
 
     def __enter__(self):
         self.start()
