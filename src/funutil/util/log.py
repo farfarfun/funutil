@@ -16,3 +16,9 @@ def get_logger(
         f"init logger with name={name} and level={level}",
     )
     return logger
+
+
+def getLogger(
+    name="default", level=logging.INFO, formatter="%(asctime)s - %(name)s - %(levelname)s - %(message)s", handler=None
+):
+    return get_logger(name, level=level, formatter=formatter, handler=handler)
