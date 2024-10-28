@@ -1,10 +1,10 @@
-import logging
 import time
 from datetime import datetime, timedelta
 
-logger = logging.getLogger("funutil")
+from funutil.util.log import get_logger
 
-logger.setLevel(logging.DEBUG)
+logger = get_logger("funutil")
+
 
 _DAY_SECOND = 24 * 60 * 60
 _HOUR_SECOND = 60 * 60

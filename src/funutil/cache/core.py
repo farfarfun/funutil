@@ -1,11 +1,13 @@
 import hashlib
 import inspect
-import logging
 import os
 import pickle
 from functools import cache, cached_property, lru_cache, wraps
 
-logger = logging.getLogger("funutil")
+from funutil.util.log import get_logger
+
+logger = get_logger("funutil")
+
 
 __all__ = ["lru_cache", "PickleCache", "pkl_cache", "cache", "cached_property"]
 
