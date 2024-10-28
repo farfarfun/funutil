@@ -72,4 +72,4 @@ class PickleCache:
 
 
 def pkl_cache(cache_key, cache_dir=".cache", is_cache="cache", printf=False, *args, **kwargs):
-    return PickleCache(cache_key, cache_dir, is_cache, printf=False, *args, **kwargs)
+    return PickleCache(cache_key, cache_dir, is_cache, printf=printf, *args, **kwargs)
