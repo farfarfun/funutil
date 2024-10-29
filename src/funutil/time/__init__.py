@@ -1,3 +1,3 @@
-from .timer import RunTimer
+from .timer import RunTimer, run_timer
 
-__all__ = ["RunTimer"]
+__all__ = ["RunTimer", "run_timer"]

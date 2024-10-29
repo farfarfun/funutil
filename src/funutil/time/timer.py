@@ -31,7 +31,7 @@ class CacheDump:
 class RunTimer:
     cache_dump = CacheDump(elapsed=3)
 
-    def __init__(self, time_func=time.perf_counter, dump_file=None):
+    def __init__(self, time_func=time.perf_counter, dump_file="runtime.log"):
         self.counter = 0
         self.elapsed = 0
         self.dump_file = dump_file
@@ -78,3 +78,7 @@ class RunTimer:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.stop()
         return True
+
+
+def run_timer(func):
+    return RunTimer().__call__(func)
