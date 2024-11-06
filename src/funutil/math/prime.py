@@ -18,14 +18,14 @@ def is_probable_prime(n, trials=10):
             break
         s += 1
         d = quotient
-    assert (2 ** s * d == n - 1)
+    assert 2**s * d == n - 1
 
     # 测试以a为底时，n是否为合数
     def try_composite(a):
         if pow(a, d, n) == 1:  # 相当于(a^d)%n
             return False
         for i in range(s):
-            if pow(a, 2 ** i * d, n) == n - 1:  # 相当于(a^((2^i)*d))%n
+            if pow(a, 2**i * d, n) == n - 1:  # 相当于(a^((2^i)*d))%n
                 return False
         return True  # 以上条件都不满足时，n一定是合数
 

@@ -3,9 +3,7 @@ from functools import cache
 
 
 @cache
-def get_logger(
-    name="default", level=logging.INFO, formatter="%(asctime)s - %(name)s - %(levelname)s - %(message)s", handler=None
-):
+def get_logger(name="default", level=logging.INFO, formatter=None, handler=None):
     logger = logging.getLogger(name)
     if logger.hasHandlers():
         logger.info(f"logger={name} is already configured")
@@ -24,11 +22,9 @@ def get_logger(
 
 
 def getLogger(
-    name="default", level=logging.INFO, formatter="%(asctime)s - %(name)s - %(levelname)s - %(message)s", handler=None
+    name="default",
+    level=logging.INFO,
+    formatter="%(asctime)s %(name)s %(levelname)s [%(filename)s - %(lineno)d - %(funcName)s] %(message)s",
+    handler=None,
 ):
     return get_logger(name, level=level, formatter=formatter, handler=handler)
-
-
-
-
-

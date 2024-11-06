@@ -96,12 +96,18 @@ class Tag(six.with_metaclass(TagMeta, object)):  # type: ignore
         elif self.children and not self.attributes:
             return "%s(%s)" % (self.name, self._repr_children())
         elif self.attributes and self.children:
-            return "%s(%s)(%s)" % (self.name, self._repr_attributes(), self._repr_children())
+            return "%s(%s)(%s)" % (
+                self.name,
+                self._repr_attributes(),
+                self._repr_children(),
+            )
         else:
             return "%s()" % self.name
 
     def _repr_attributes(self):
-        return ", ".join("%s=%r" % (key, value) for key, value in six.iteritems(self.attributes))
+        return ", ".join(
+            "%s=%r" % (key, value) for key, value in six.iteritems(self.attributes)
+        )
 
     def _repr_children(self):
         return ", ".join(repr(child) for child in self.children)

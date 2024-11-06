@@ -109,7 +109,10 @@ def get_detail(meta):
         times -= 1
         try:
             response = requests.get(
-                "https://apps.webofknowledge.com/InboundService.do", headers=headers, params=params, cookies=cookies
+                "https://apps.webofknowledge.com/InboundService.do",
+                headers=headers,
+                params=params,
+                cookies=cookies,
             )
             break
         except Exception as e:
@@ -129,7 +132,9 @@ def get_detail(meta):
         value = value.strip(" ")
         return value
 
-    meta["sourceTitle"] = get_value(soup, "block-record-info block-record-info-source", "sourceTitle")
+    meta["sourceTitle"] = get_value(
+        soup, "block-record-info block-record-info-source", "sourceTitle"
+    )
 
     # s1 = soup.find('div',class_='block-record-info block-record-info-source').find_all('p',class_='FR_field')
     s1 = soup.find_all("p", class_="FR_field")

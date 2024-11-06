@@ -17,7 +17,12 @@ class WorkTime:
         pass
 
     @staticmethod
-    def time_to_end(time_str=None, format_str="%Y-%m-%d %H:%M:%S", circle_time=_DAY_SECOND, threshold_time=60):
+    def time_to_end(
+        time_str=None,
+        format_str="%Y-%m-%d %H:%M:%S",
+        circle_time=_DAY_SECOND,
+        threshold_time=60,
+    ):
         if time_str is None:
             unix = int(time.mktime(datetime.datetime.now().timetuple()))
         elif isinstance(time_str, int) or isinstance(time_str, float):
@@ -35,16 +40,24 @@ class WorkTime:
         return False
 
     def time_to_day_end(self, *args, **kwargs):
-        return self.time_to_end(circle_time=_DAY_SECOND, threshold_time=60, *args, **kwargs)
+        return self.time_to_end(
+            circle_time=_DAY_SECOND, threshold_time=60, *args, **kwargs
+        )
 
     def time_to_hour_end(self, *args, **kwargs):
-        return self.time_to_end(circle_time=_HOUR_SECOND, threshold_time=60, *args, **kwargs)
+        return self.time_to_end(
+            circle_time=_HOUR_SECOND, threshold_time=60, *args, **kwargs
+        )
 
     def time_to_ten_minute_end(self, *args, **kwargs):
-        return self.time_to_end(circle_time=_TEN_MINUTE_SECOND, threshold_time=30, *args, **kwargs)
+        return self.time_to_end(
+            circle_time=_TEN_MINUTE_SECOND, threshold_time=30, *args, **kwargs
+        )
 
     def time_to_minute_end(self, *args, **kwargs):
-        return self.time_to_end(circle_time=_MINUTE_SECOND, threshold_time=10, *args, **kwargs)
+        return self.time_to_end(
+            circle_time=_MINUTE_SECOND, threshold_time=10, *args, **kwargs
+        )
 
     def test(self):
         time_str = "2021-01-01 10:32:32"

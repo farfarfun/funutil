@@ -255,7 +255,9 @@ class LocalPath:
         return {
             "dir": self.file_dir,
             "name": file_name,
-            "path": self.file_dir if file_name is None else os.path.join(self.file_dir, file_name),
+            "path": self.file_dir
+            if file_name is None
+            else os.path.join(self.file_dir, file_name),
             "isdir": True if file_name is None else False,
             "deep": deep,
         }

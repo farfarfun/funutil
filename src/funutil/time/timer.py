@@ -22,7 +22,10 @@ class CacheDump:
             return
         if time.time() - self.last_dump_time < self.elapsed:
             return
-        dump_data = {"data": self.dump_data, "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+        dump_data = {
+            "data": self.dump_data,
+            "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        }
         with open(dump_file, "w", encoding="utf-8") as out_data:
             out_data.write(json.dumps(dump_data, indent=4, sort_keys=True))
         self.last_dump_time = time.time()
