@@ -1,9 +1,9 @@
 import time
 from datetime import datetime, timedelta
 
-from funutil.util.log import get_logger
+from funutil.util.log import getLogger
 
-logger = get_logger("funutil")
+logger = getLogger("funutil")
 
 
 _DAY_SECOND = 24 * 60 * 60
