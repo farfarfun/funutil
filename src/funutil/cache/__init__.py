@@ -1,3 +1,14 @@
-from .core import PickleCache, cache, cached_property, lru_cache, pkl_cache
+from .box import cache, fifo_cache, lfu_cache, lru_cache, pkl_cache, rr_cache, ttl_cache
+from .core import PickleCache, cached_property
 
-__all__ = ["lru_cache", "PickleCache", "pkl_cache", "cache", "cached_property"]
+__all__ = [
+    "lru_cache",
+    "PickleCache",
+    "pkl_cache",
+    "cache",
+    "cached_property",
+    "ttl_cache",
+    "lfu_cache",
+    "fifo_cache",
+    "rr_cache",
+]
