@@ -1,5 +1,5 @@
-from .box import cache, fifo_cache, lfu_cache, lru_cache, pkl_cache, rr_cache, ttl_cache
-from .core import PickleCache, cached_property
+from .box import cache, fifo_cache, lfu_cache, lru_cache, rr_cache, ttl_cache
+from .core import PickleCache, cached_property, pkl_cache
 
 __all__ = [
     "lru_cache",
