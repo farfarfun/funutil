@@ -17,7 +17,7 @@ def get_logger(name="default", level=logging.INFO, formatter=None, handler=None)
     logger.setLevel(level=level)
 
     logger.info(
-        f"init logger with name={name} and level={level}",
+        f"init logger with name={name} and level={logging.getLevelName(level)}",
     )
     return logger
 
