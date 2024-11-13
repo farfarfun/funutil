@@ -41,7 +41,7 @@ class PickleCache:
         os.makedirs(self.cache_dir, exist_ok=True)
         ignore_file = f"{self.cache_dir}/.gitignore"
         if not os.path.exists(ignore_file):
-            with open(ignore_file, "wb") as f:
+            with open(ignore_file, "w") as f:
                 f.write("*")
 
         with open(cache_file, "wb") as f:
