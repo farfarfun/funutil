@@ -12,11 +12,12 @@ __all__ = ["DiskCache", "disk_cache"]
 
 class DiskCache:
     def __init__(
-        self, cache_key, cache_dir=".cache", is_cache="cache", *args, **kwargs
+            self, cache_key, cache_dir=".cache", is_cache="cache", expire=60 * 60 * 24, *args, **kwargs
     ):
         self.cache_key = cache_key
         self.cache_dir = cache_dir
         self.is_cache = is_cache
+        self.expire = expire
         self.cache = Cache(self.cache_dir)
 
         os.makedirs(self.cache_dir, exist_ok=True)
@@ -29,7 +30,7 @@ class DiskCache:
         @wraps(func)
         def wrapper(*args, **kwargs):
             for i, (name, param) in enumerate(
-                list(inspect.signature(func).parameters.items())
+                    list(inspect.signature(func).parameters.items())
             ):
                 if name in kwargs.keys():
                     continue
@@ -51,7 +52,7 @@ class DiskCache:
 
             # 如果没有缓存，执行函数并缓存结果
             result = func(**kwargs)
-            self.cache.set(cache_key, result, expire=60 * 10)
+            self.cache.set(cache_key, result, expire=self.expire)
             logger.debug(
                 f"Cache data for function '{func.__name__}' with key: {cache_key}"
             )
@@ -60,5 +61,5 @@ class DiskCache:
         return wrapper
 
 
-def disk_cache(cache_key, cache_dir=".cache", is_cache="cache", *args, **kwargs):
-    return DiskCache(cache_key, cache_dir, is_cache, *args, **kwargs)
+def disk_cache(cache_key, cache_dir=".cache", is_cache="cache", expire=60 * 60 * 24, *args, **kwargs):
+    return DiskCache(cache_key=cache_key, cache_dir=cache_dir, is_cache=is_cache, expire=expire, *args, **kwargs)
