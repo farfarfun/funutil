@@ -27,7 +27,9 @@ class PickleCache:
     def get_cache_file(self, key):
         key = str(key)
         # 使用 MD5 值作为缓存文件名
-        return os.path.join(self.cache_dir, hashlib.md5(key.encode()).hexdigest() + ".pkl")
+        return os.path.join(
+            self.cache_dir, hashlib.md5(key.encode()).hexdigest() + ".pkl"
+        )
 
     @staticmethod
     def load_cache(cache_file):
@@ -50,32 +52,44 @@ class PickleCache:
     def __call__(self, func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            for i, (name, param) in enumerate(list(inspect.signature(func).parameters.items())):
+            for i, (name, param) in enumerate(
+                list(inspect.signature(func).parameters.items())
+            ):
                 if name in kwargs.keys():
                     continue
                 kwargs[name] = args[i] if i < len(args) else param.default
 
             is_cache = kwargs.get(self.is_cache, True)
-            cache_key = kwargs.get(self.cache_key, "")  # 假设输入参数中有一个名为 '${cache_key}' 的字段
+            cache_key = kwargs.get(
+                self.cache_key, ""
+            )  # 假设输入参数中有一个名为 '${cache_key}' 的字段
             is_cache = is_cache and cache_key is not None
-            cache_file = self.get_cache_file(cache_key) if is_cache else None  # 将 SQL 语句作为缓存的键
+            cache_file = (
+                self.get_cache_file(cache_key) if is_cache else None
+            )  # 将 SQL 语句作为缓存的键
 
             if is_cache:
                 # 检查缓存中是否存在该键
                 cached_result = self.load_cache(cache_file)
                 if cached_result is not None:
-                    self.log(f"Cache hit for function '{func.__name__}' with key: {cache_key}")
+                    self.log(
+                        f"Cache hit for function '{func.__name__}' with key: {cache_key}"
+                    )
                     return cached_result
 
             # 如果没有缓存，执行函数并缓存结果
             result = func(**kwargs)
             if is_cache:
                 self.save_cache(cache_file, result)
-                self.log(f"Cache data for function '{func.__name__}' with key: {cache_key}")
+                self.log(
+                    f"Cache data for function '{func.__name__}' with key: {cache_key}"
+                )
             return result
 
         return wrapper
 
 
-def pkl_cache(cache_key, cache_dir=".cache", is_cache="cache", printf=False, *args, **kwargs):
+def pkl_cache(
+    cache_key, cache_dir=".cache", is_cache="cache", printf=False, *args, **kwargs
+):
     return PickleCache(cache_key, cache_dir, is_cache, printf=printf, *args, **kwargs)

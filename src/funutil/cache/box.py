@@ -1,6 +1,14 @@
 from cachebox import FIFOCache, LFUCache, LRUCache, RRCache, TTLCache, VTTLCache, cached
 
-__all__ = ["cache", "lru_cache", "ttl_cache", "vttl_cache", "lfu_cache", "fifo_cache", "rr_cache"]
+__all__ = [
+    "cache",
+    "lru_cache",
+    "ttl_cache",
+    "vttl_cache",
+    "lfu_cache",
+    "fifo_cache",
+    "rr_cache",
+]
 
 
 def cache(func, /):
