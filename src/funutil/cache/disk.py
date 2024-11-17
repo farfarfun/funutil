@@ -12,7 +12,13 @@ __all__ = ["DiskCache", "disk_cache"]
 
 class DiskCache:
     def __init__(
-            self, cache_key, cache_dir=".cache", is_cache="cache", expire=60 * 60 * 24, *args, **kwargs
+        self,
+        cache_key,
+        cache_dir=".cache",
+        is_cache="cache",
+        expire=60 * 60 * 24,
+        *args,
+        **kwargs,
     ):
         self.cache_key = cache_key
         self.cache_dir = cache_dir
@@ -30,7 +36,7 @@ class DiskCache:
         @wraps(func)
         def wrapper(*args, **kwargs):
             for i, (name, param) in enumerate(
-                    list(inspect.signature(func).parameters.items())
+                list(inspect.signature(func).parameters.items())
             ):
                 if name in kwargs.keys():
                     continue
@@ -61,5 +67,19 @@ class DiskCache:
         return wrapper
 
 
-def disk_cache(cache_key, cache_dir=".cache", is_cache="cache", expire=60 * 60 * 24, *args, **kwargs):
-    return DiskCache(cache_key=cache_key, cache_dir=cache_dir, is_cache=is_cache, expire=expire, *args, **kwargs)
+def disk_cache(
+    cache_key,
+    cache_dir=".cache",
+    is_cache="cache",
+    expire=60 * 60 * 24,
+    *args,
+    **kwargs,
+):
+    return DiskCache(
+        cache_key=cache_key,
+        cache_dir=cache_dir,
+        is_cache=is_cache,
+        expire=expire,
+        *args,
+        **kwargs,
+    )
