@@ -60,7 +60,7 @@ def _getLoggerBak(
 def get_logger(name="default", level="DEBUG", formatter=None, *args, **kwargs):
     if not os.path.exists("logs"):
         os.makedirs("logs", exist_ok=True)
-        with open(f"logs/.gitignore", "w") as f:
+        with open("logs/.gitignore", "w") as f:
             f.write("*")
     logger.add(
         sink=f"logs/{name}.log",
