@@ -132,7 +132,7 @@ wheels = [
 
 [[package]]
 name = "funutil"
-version = "1.0.33"
+version = "1.0.34"
 source = { virtual = "." }
 dependencies = [
     { name = "cachebox" },
