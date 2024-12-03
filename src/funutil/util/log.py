@@ -5,6 +5,11 @@ from functools import cache
 
 from loguru import logger
 
+if not os.path.exists("logs"):
+    os.makedirs("logs", exist_ok=True)
+    with open("logs/.gitignore", "w") as f:
+        f.write("*")
+
 logger.configure(
     handlers=[
         {
