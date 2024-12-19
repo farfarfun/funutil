@@ -1,4 +1,3 @@
-import logging
 import os
 import sys
 from functools import cache
@@ -30,39 +29,7 @@ logger.configure(
 
 
 @cache
-def _get_logger_bak(name="default", level=logging.INFO, formatter=None, handler=None):
-    formatter = (
-        formatter
-        or "%(asctime)s %(name)s %(levelname)s [%(filename)s - %(lineno)d - %(funcName)s] %(message)s"
-    )
-    logger = logging.getLogger(name)
-    if logger.hasHandlers():
-        logger.info(f"logger={name} is already configured")
-        return logger
-    if handler is None:
-        handler = logging.StreamHandler()
-        handler.setLevel(level=level)
-        handler.setFormatter(logging.Formatter(formatter))
-    logger.addHandler(handler)
-    logger.setLevel(level=level)
-
-    logger.info(
-        f"init logger with name={name} and level={logging.getLevelName(level)}",
-    )
-    return logger
-
-
-def _getLoggerBak(
-    name="default",
-    level=logging.INFO,
-    formatter=None,
-    handler=None,
-):
-    return _get_logger_bak(name, level=level, formatter=formatter, handler=handler)
-
-
-@cache
-def get_logger(name="default", level="DEBUG", formatter=None, *args, **kwargs):
+def get_logger(name="default", level="INFO", formatter=None, *args, **kwargs):
     if not os.path.exists("logs"):
         os.makedirs("logs", exist_ok=True)
         with open("logs/.gitignore", "w") as f:
@@ -82,6 +49,6 @@ def get_logger(name="default", level="DEBUG", formatter=None, *args, **kwargs):
 
 
 def getLogger(
-    name="default", level="DEBUG", formatter=None, handler=None, *args, **kwargs
+    name="default", level="INFO", formatter=None, handler=None, *args, **kwargs
 ):
     return get_logger(name, level=level, formatter=formatter, handler=handler)
