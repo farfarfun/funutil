@@ -23,12 +23,12 @@ def vttl_cache(maxsize=1000):
     return lambda func: cached(VTTLCache(maxsize=maxsize, ttl=60)).__call__(func)
 
 
-def ttl_cache(maxsize=1000):
+def ttl_cache(maxsize=1000, ttl=60):
     """
     TTLCache: the TTL cache will automatically remove the element in the cache that has expired.
     TTLCache：TTL 缓存会自动移除已过期的缓存元素。
     """
-    return lambda func: cached(TTLCache(maxsize=maxsize, ttl=60)).__call__(func)
+    return lambda func: cached(TTLCache(maxsize=maxsize, ttl=ttl)).__call__(func)
 
 
 def lru_cache(maxsize=1000):
