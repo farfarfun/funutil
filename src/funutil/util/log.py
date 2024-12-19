@@ -15,6 +15,7 @@ logger.configure(
             "sink": sys.stderr,
             "format": "{time:YYYY-MM-DD HH:mm:ss.SSS} |<lvl>{level:8}</>| {name} : {module}:{line:4} | <cyan>{extra[module_name]}</> | - <lvl>{message}</>",
             "colorize": True,
+            "level": "INFO",
         },
         {
             "sink": "logs/all.log",
@@ -23,6 +24,7 @@ logger.configure(
             "rotation": "00:00",
             "compression": "gz",
             "retention": 30,
+            "level": "INFO",
         },
     ]
 )
