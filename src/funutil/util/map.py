@@ -11,3 +11,12 @@ def deep_get(data: dict, *args):
         else:
             return None
     return data
+
+
+def find_get(data: dict, *args):
+    if not data:
+        return None
+    for arg in args:
+        if arg in data:
+            return data[arg]
+    return None
