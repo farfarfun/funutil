@@ -2,6 +2,7 @@ import json
 import time
 from datetime import datetime
 from functools import wraps
+from threading import Timer
 
 
 class CacheDump:
@@ -81,6 +82,13 @@ class RunTimer:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.stop()
         return True
+
+
+class RepeatingTimer(Timer):
+    def run(self):
+        while not self.finished.is_set():
+            self.function(*self.args, **self.kwargs)
+            self.finished.wait(self.interval)
 
 
 def run_timer(func):
