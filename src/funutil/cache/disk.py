@@ -1,6 +1,7 @@
 import inspect
 import os
 from functools import wraps
+from hashlib import md5
 
 from diskcache import Cache
 from funutil.util.log import getLogger
@@ -14,7 +15,7 @@ class DiskCache:
     def __init__(
         self,
         cache_key,
-        cache_dir=".cache",
+        cache_dir=None,
         is_cache="cache",
         expire=60 * 60 * 24,
         *args,
@@ -24,15 +25,28 @@ class DiskCache:
         self.cache_dir = cache_dir
         self.is_cache = is_cache
         self.expire = expire
-        self.cache = Cache(self.cache_dir)
+        self.cache: Cache = None
 
+    def init_cache(self, func) -> Cache:
+        if self.cache is not None:
+            return self.cache
+        uid = md5(func.__code__.co_filename.encode("utf-8")).hexdigest()
+        if self.cache_dir is None:
+            self.cache_dir = os.path.join(".disk_cache", f"{uid}-{func.__name__}")
+        logger.success(
+            f"init func {func.__name__} success. with cache_dir: {self.cache_dir}"
+        )
+        self.cache = Cache(self.cache_dir)
         os.makedirs(self.cache_dir, exist_ok=True)
         ignore_file = f"{self.cache_dir}/.gitignore"
         if not os.path.exists(ignore_file):
             with open(ignore_file, "w") as f:
                 f.write("*")
+        return self.cache
 
     def __call__(self, func):
+        self.init_cache(func)
+
         @wraps(func)
         def wrapper(*args, **kwargs):
             for i, (name, param) in enumerate(
@@ -69,7 +83,7 @@ class DiskCache:
 
 def disk_cache(
     cache_key,
-    cache_dir=".cache",
+    cache_dir=None,
     is_cache="cache",
     expire=60 * 60 * 24,
     *args,
@@ -83,3 +97,17 @@ def disk_cache(
         *args,
         **kwargs,
     )
+
+
+def example():
+    @disk_cache(cache_key="name")
+    def get_uid(name="d"):
+        print(1)
+        return 3
+
+    print(get_uid("d"))
+    print(get_uid("d"))
+    print(get_uid("d"))
+
+
+# example()
