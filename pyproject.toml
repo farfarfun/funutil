@@ -1,6 +1,6 @@
 [project]
 name = "funutil"
-version = "1.0.53"
+version = "1.0.54"
 description = "funutil"
 readme = "README.md"
 requires-python = ">=3.8"
