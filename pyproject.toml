@@ -1,10 +1,10 @@
 [project]
 name = "funutil"
-version = "1.0.53"
+version = "1.0.55"
 description = "funutil"
 readme = "README.md"
 requires-python = ">=3.8"
-dependencies = [ "cachebox>=4.3.0", "cachetools>=4.2.4", "diskcache>=5.6.3", "loguru>=0.7.2",]
+dependencies = [ "cachebox==5.0.1", "cachetools>=4.2.4", "diskcache>=5.6.3", "loguru>=0.7.2",]
 [[project.authors]]
 name = "牛哥"
 email = "niuliangtao@qq.com"
