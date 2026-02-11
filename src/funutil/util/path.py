@@ -1,8 +1,8 @@
 import os
 
-from funutil.util.log import get_logger
+from funlog import getLogger
 
-logger = get_logger("funutil")
+logger = getLogger("funutil")
 
 
 def info(msg):

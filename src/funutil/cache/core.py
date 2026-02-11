@@ -4,9 +4,9 @@ import os
 import pickle
 from functools import cache, cached_property, lru_cache, wraps
 
-from funutil.util.log import get_logger
+from funlog import getLogger
 
-logger = get_logger("funutil")
+logger = getLogger("funutil")
 
 __all__ = ["lru_cache", "PickleCache", "pkl_cache", "cache", "cached_property"]
 
