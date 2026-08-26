@@ -1,6 +1,6 @@
 import os
 
-from funlog import getLogger
+from nltlog import getLogger
 
 logger = getLogger("funutil")
 

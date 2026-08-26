@@ -1,7 +1,7 @@
 import os
 import shutil
 
-from funlog import getLogger
+from nltlog import getLogger
 
 logger = getLogger("funutil")
 

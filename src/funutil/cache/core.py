@@ -4,7 +4,7 @@ import os
 import pickle
 from functools import cache, cached_property, lru_cache, wraps
 
-from funlog import getLogger
+from nltlog import getLogger
 
 logger = getLogger("funutil")
 
