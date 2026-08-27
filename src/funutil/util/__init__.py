@@ -1,4 +1,4 @@
-from nltlog import get_logger, getLogger
+from farlog import get_logger, getLogger
 
 from .map import deep_get, find_get
 from .package import get_package_version

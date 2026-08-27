@@ -1,10 +1,10 @@
 [project]
 name = "funutil"
-version = "1.0.63"
+version = "1.0.64"
 description = "funutil"
 readme = "README.md"
 requires-python = ">=3.10"
-dependencies = [ "nltlog>=1.1.6", "cachebox>=3.0.0", "cachetools>=5.0.0", "diskcache>=5.0.0", "six>=1.16.0",]
+dependencies = [ "farlog>=1.1.7", "cachebox>=3.0.0", "cachetools>=5.0.0", "diskcache>=5.0.0", "six>=1.16.0",]
 license = "MIT"
 license-files = ["LICENSE"]
 [[project.authors]]

@@ -4,7 +4,7 @@ import os
 import pickle
 from functools import cache, cached_property, lru_cache, wraps
 
-from nltlog import getLogger
+from farlog import getLogger
 
 logger = getLogger("funutil")
 

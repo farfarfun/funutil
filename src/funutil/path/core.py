@@ -1,7 +1,7 @@
 import os
 import shutil
 
-from nltlog import getLogger
+from farlog import getLogger
 
 logger = getLogger("funutil")
 
