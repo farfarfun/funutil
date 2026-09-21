@@ -1,10 +1,10 @@
 [project]
 name = "funutil"
-version = "1.0.65"
-description = "funutil"
+version = "1.0.66"
+description = "轻量的 Python 通用工具库"
 readme = "README.md"
 requires-python = ">=3.10"
-dependencies = [ "farlog>=1.1.7", "cachebox>=3.0.0", "cachetools>=5.0.0", "diskcache>=5.0.0", "six>=1.16.0",]
+dependencies = [ "farlog>=1.1.7", "cachebox>=6.2.6", "cachetools>=5.0.0", "diskcache>=5.0.0", "six>=1.16.0",]
 license = "MIT"
 license-files = ["LICENSE"]
 [[project.authors]]
@@ -29,8 +29,6 @@ Releases = "https://github.com/farfarfun/funutil/releases"
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
-
-[tool.setuptools]
 
 [dependency-groups]
 dev = ["pytest>=7.0"]

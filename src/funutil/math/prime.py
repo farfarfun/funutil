@@ -1,8 +1,18 @@
 import random
 
 
-def is_probable_prime(n, trials=10):
-    assert n >= 2
+def is_probable_prime(n: int, trials: int = 10) -> bool:
+    """使用 Miller-Rabin 测试判断整数是否可能为素数。
+
+    Args:
+        n: 待判断的整数。
+        trials: 随机测试次数。
+
+    Returns:
+        ``n`` 可能为素数时返回 ``True``，确定为合数时返回 ``False``。
+    """
+    if n < 2:
+        return False
     # 2是素数~
     if n == 2:
         return True

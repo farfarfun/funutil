@@ -2,29 +2,62 @@ import hashlib
 import inspect
 import os
 import pickle
+from collections.abc import Callable
 from functools import cache, cached_property, lru_cache, wraps
+from typing import Any
 
 from farlog import getLogger
 
 logger = getLogger("funutil")
 
-__all__ = ["lru_cache", "PickleCache", "pkl_cache", "cache", "cached_property"]
+__all__ = ["PickleCache", "cache", "cached_property", "lru_cache", "pkl_cache"]
 
 
 class PickleCache:
-    def __init__(self, cache_key, cache_dir=".cache", is_cache="cache", printf=False):
+    """使用 pickle 文件保存函数结果的装饰器。
+
+    Args:
+        cache_key: 用作缓存键的函数参数名。
+        cache_dir: 缓存文件目录。
+        is_cache: 控制是否缓存的函数参数名。
+        printf: 是否以信息级别记录缓存事件。
+    """
+
+    def __init__(
+        self,
+        cache_key: str,
+        cache_dir: str = ".cache",
+        is_cache: str = "cache",
+        printf: bool = False,
+        *args: Any,
+        **kwargs: Any,
+    ) -> None:
         self.cache_key = cache_key
         self.cache_dir = cache_dir
         self.is_cache = is_cache
 
         self.printf = printf
 
-    def log(self, msg):
-        if self.printf:
-            print(msg)
-        logger.debug(msg)
+    def log(self, msg: str) -> None:
+        """记录缓存事件。
 
-    def get_cache_file(self, key):
+        Args:
+            msg: 日志消息。
+        """
+        if self.printf:
+            logger.info(msg)
+        else:
+            logger.debug(msg)
+
+    def get_cache_file(self, key: Any) -> str:
+        """返回缓存键对应的文件路径。
+
+        Args:
+            key: 缓存键。
+
+        Returns:
+            pickle 缓存文件路径。
+        """
         key = str(key)
         # 使用 MD5 值作为缓存文件名
         return os.path.join(
@@ -32,14 +65,28 @@ class PickleCache:
         )
 
     @staticmethod
-    def load_cache(cache_file):
+    def load_cache(cache_file: str) -> Any | None:
+        """读取缓存文件，文件不存在或内容无效时返回 ``None``。
+
+        Args:
+            cache_file: pickle 缓存文件路径。
+
+        Returns:
+            已缓存的数据；无法读取时返回 ``None``。
+        """
         try:
             with open(cache_file, "rb") as f:
                 return pickle.load(f)
         except (FileNotFoundError, pickle.PickleError):
             return None
 
-    def save_cache(self, cache_file, data):
+    def save_cache(self, cache_file: str, data: Any) -> None:
+        """把数据写入缓存文件。
+
+        Args:
+            cache_file: pickle 缓存文件路径。
+            data: 要缓存的数据。
+        """
         os.makedirs(self.cache_dir, exist_ok=True)
         ignore_file = f"{self.cache_dir}/.gitignore"
         if not os.path.exists(ignore_file):
@@ -49,13 +96,13 @@ class PickleCache:
         with open(cache_file, "wb") as f:
             pickle.dump(data, f)
 
-    def __call__(self, func):
+    def __call__(self, func: Callable[..., Any]) -> Callable[..., Any]:
         @wraps(func)
         def wrapper(*args, **kwargs):
             for i, (name, param) in enumerate(
                 list(inspect.signature(func).parameters.items())
             ):
-                if name in kwargs.keys():
+                if name in kwargs:
                     continue
                 kwargs[name] = args[i] if i < len(args) else param.default
 
@@ -90,6 +137,24 @@ class PickleCache:
 
 
 def pkl_cache(
-    cache_key, cache_dir=".cache", is_cache="cache", printf=False, *args, **kwargs
-):
-    return PickleCache(cache_key, cache_dir, is_cache, printf=printf, *args, **kwargs)
+    cache_key: str,
+    cache_dir: str = ".cache",
+    is_cache: str = "cache",
+    printf: bool = False,
+    *args: Any,
+    **kwargs: Any,
+) -> PickleCache:
+    """创建 pickle 文件缓存装饰器。
+
+    Args:
+        cache_key: 用作缓存键的函数参数名。
+        cache_dir: 缓存文件目录。
+        is_cache: 控制是否缓存的函数参数名。
+        printf: 是否以信息级别记录缓存事件。
+        *args: 为兼容旧调用保留的扩展位置参数。
+        **kwargs: 为兼容旧调用保留的扩展关键字参数。
+
+    Returns:
+        可用于装饰函数的缓存对象。
+    """
+    return PickleCache(cache_key, cache_dir, is_cache, printf, *args, **kwargs)

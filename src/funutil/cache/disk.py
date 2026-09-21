@@ -1,9 +1,12 @@
 import inspect
 import os
+from collections.abc import Callable
 from functools import wraps
 from hashlib import md5
+from typing import Any
 
 from diskcache import Cache
+
 from funutil.util.log import getLogger
 
 logger = getLogger("funutil")
@@ -12,22 +15,39 @@ __all__ = ["DiskCache", "disk_cache"]
 
 
 class DiskCache:
+    """使用 diskcache 保存函数结果的装饰器。
+
+    Args:
+        cache_key: 用作缓存键的函数参数名。
+        cache_dir: 缓存目录；省略时按被装饰函数生成。
+        is_cache: 控制是否缓存的函数参数名。
+        expire: 缓存有效秒数。
+    """
+
     def __init__(
         self,
-        cache_key,
-        cache_dir=None,
-        is_cache="cache",
-        expire=60 * 60 * 24,
-        *args,
-        **kwargs,
-    ):
+        cache_key: str,
+        cache_dir: str | None = None,
+        is_cache: str = "cache",
+        expire: float = 60 * 60 * 24,
+        *args: Any,
+        **kwargs: Any,
+    ) -> None:
         self.cache_key = cache_key
         self.cache_dir = cache_dir
         self.is_cache = is_cache
         self.expire = expire
-        self.cache: Cache = None
+        self.cache: Cache | None = None
 
-    def init_cache(self, func) -> Cache:
+    def init_cache(self, func: Callable[..., Any]) -> Cache:
+        """初始化并返回底层磁盘缓存。
+
+        Args:
+            func: 被缓存的函数。
+
+        Returns:
+            已初始化的 diskcache 缓存。
+        """
         if self.cache is not None:
             return self.cache
         uid = md5(func.__code__.co_filename.encode("utf-8")).hexdigest()
@@ -44,7 +64,7 @@ class DiskCache:
                 f.write("*")
         return self.cache
 
-    def __call__(self, func):
+    def __call__(self, func: Callable[..., Any]) -> Callable[..., Any]:
         self.init_cache(func)
 
         @wraps(func)
@@ -52,7 +72,7 @@ class DiskCache:
             for i, (name, param) in enumerate(
                 list(inspect.signature(func).parameters.items())
             ):
-                if name in kwargs.keys():
+                if name in kwargs:
                     continue
                 kwargs[name] = args[i] if i < len(args) else param.default
 
@@ -82,32 +102,24 @@ class DiskCache:
 
 
 def disk_cache(
-    cache_key,
-    cache_dir=None,
-    is_cache="cache",
-    expire=60 * 60 * 24,
-    *args,
-    **kwargs,
-):
-    return DiskCache(
-        cache_key=cache_key,
-        cache_dir=cache_dir,
-        is_cache=is_cache,
-        expire=expire,
-        *args,
-        **kwargs,
-    )
+    cache_key: str,
+    cache_dir: str | None = None,
+    is_cache: str = "cache",
+    expire: float = 60 * 60 * 24,
+    *args: Any,
+    **kwargs: Any,
+) -> DiskCache:
+    """创建磁盘缓存装饰器。
 
+    Args:
+        cache_key: 用作缓存键的函数参数名。
+        cache_dir: 缓存目录。
+        is_cache: 控制是否缓存的函数参数名。
+        expire: 缓存有效秒数。
+        *args: 为兼容旧调用保留的扩展位置参数。
+        **kwargs: 为兼容旧调用保留的扩展关键字参数。
 
-def example():
-    @disk_cache(cache_key="name")
-    def get_uid(name="d"):
-        print(1)
-        return 3
-
-    print(get_uid("d"))
-    print(get_uid("d"))
-    print(get_uid("d"))
-
-
-# example()
+    Returns:
+        可用于装饰函数的缓存对象。
+    """
+    return DiskCache(cache_key, cache_dir, is_cache, expire, *args, **kwargs)

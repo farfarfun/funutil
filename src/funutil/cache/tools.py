@@ -1,48 +1,80 @@
+from collections.abc import Callable
+from typing import Any
+
 from cachetools import FIFOCache, LFUCache, LRUCache, RRCache, TTLCache, cached
 
-__all__ = ["cache", "lru_cache", "ttl_cache", "lfu_cache", "fifo_cache", "rr_cache"]
+__all__ = ["cache", "fifo_cache", "lfu_cache", "lru_cache", "rr_cache", "ttl_cache"]
+
+_Decorator = Callable[[Callable[..., Any]], Callable[..., Any]]
 
 
-def cache(func, /):
-    print(func.__name__)
+def cache(func: Callable[..., Any], /) -> Callable[..., Any]:
+    """使用默认大小的 LRU 缓存装饰函数。
+
+    Args:
+        func: 要缓存结果的函数。
+
+    Returns:
+        带缓存能力的函数。
+    """
     return cached(LRUCache(maxsize=100)).__call__(func)
 
 
-def ttl_cache(maxsize=1000):
-    """
-    TTLCache: the TTL cache will automatically remove the element in the cache that has expired.
-    TTLCache：TTL 缓存会自动移除已过期的缓存元素。
+def ttl_cache(maxsize: int = 1000) -> _Decorator:
+    """创建固定 60 秒有效期的缓存装饰器。
+
+    Args:
+        maxsize: 最大缓存项数。
+
+    Returns:
+        函数装饰器。
     """
     return lambda func: cached(TTLCache(maxsize=maxsize, ttl=60)).__call__(func)
 
 
-def lru_cache(maxsize=1000):
-    """
-    LRUCache: the LRU cache will remove the element in the cache that has not been accessed in the longest time.
-    LRUCache：LRU 缓存会移除缓存中自上次访问以来时间最长的元素。
+def lru_cache(maxsize: int = 1000) -> _Decorator:
+    """创建最近最少使用缓存装饰器。
+
+    Args:
+        maxsize: 最大缓存项数。
+
+    Returns:
+        函数装饰器。
     """
     return lambda func: cached(LRUCache(maxsize=maxsize)).__call__(func)
 
 
-def lfu_cache(maxsize=1000):
-    """
-    LFUCache: the LFU cache will remove the element in the cache that has been accessed the least, regardless of time.
-    LFUCache：LFU 缓存会移除缓存中访问次数最少的元素，不论其访问时间。
+def lfu_cache(maxsize: int = 1000) -> _Decorator:
+    """创建最不经常使用缓存装饰器。
+
+    Args:
+        maxsize: 最大缓存项数。
+
+    Returns:
+        函数装饰器。
     """
     return lambda func: cached(LFUCache(maxsize=maxsize)).__call__(func)
 
 
-def fifo_cache(maxsize=1000):
-    """
-    FIFOCache: the FIFO cache will remove the element that has been in the cache the longest.
-    FIFOCache：FIFO 缓存将移除在缓存中停留时间最长的元素。
+def fifo_cache(maxsize: int = 1000) -> _Decorator:
+    """创建先进先出缓存装饰器。
+
+    Args:
+        maxsize: 最大缓存项数。
+
+    Returns:
+        函数装饰器。
     """
     return lambda func: cached(FIFOCache(maxsize=maxsize)).__call__(func)
 
 
-def rr_cache(maxsize=1000):
-    """
-    RRCache: the RR cache will choose randomly element to remove it to make space when necessary.
-    RRCache: RR 缓存会在必要时随机选择一个元素进行移除，以腾出空间。
+def rr_cache(maxsize: int = 1000) -> _Decorator:
+    """创建随机替换缓存装饰器。
+
+    Args:
+        maxsize: 最大缓存项数。
+
+    Returns:
+        函数装饰器。
     """
     return lambda func: cached(RRCache(maxsize=maxsize)).__call__(func)

@@ -1,136 +1,51 @@
 import os
+from collections.abc import Iterable
+from os import PathLike
+from typing import Any
 
-from farlog import getLogger
+from funutil.path.core import (
+    delete_file,
+    exist_and_create,
+    exists,
+    exists_dir,
+    exists_file,
+    info,
+    join_path,
+    makedirs,
+    path_join,
+    path_parse,
+    rename,
+)
 
-logger = getLogger("funutil")
+__all__ = [
+    "LocalPath",
+    "delete_file",
+    "exist_and_create",
+    "exists",
+    "exists_dir",
+    "exists_file",
+    "info",
+    "join_path",
+    "list_file",
+    "makedirs",
+    "merge_file",
+    "meta",
+    "path_join",
+    "path_parse",
+    "rename",
+    "split_file",
+]
 
-
-def info(msg):
-    logger.info(msg)
-
-
-"""
-os.path重构
-"""
-
-
-def rename(src, dst):
-    if os.path.exists(src):
-        return os.rename(src, dst)
-    else:
-        logger.error("{} not exist!".format(src))
-        return
-
-
-"""
-path
-"""
-
-
-def path_parse(path):
-    if path is None:
-        return path
-    # ~处理
-    path = os.path.expanduser(path)
-    if not path.startswith("/"):
-        return os.path.join(os.getcwd(), path)
-    return path
-
-
-def path_join(parent_path, child_path):
-    parent_path = path_parse(parent_path)
-
-    return os.path.join(parent_path, child_path)
-    pass
+_Path = str | PathLike[str]
 
 
-def join_path(child_path, parent_path=None):
-    return path_join(parent_path, child_path)
-
-
-def delete_file(file_path):
-    if exists_file(file_path):
-        info("file exist and delete")
-        os.remove(file_path)
-
-
-def exists_dir(file_dir, mkdir=False):
-    return exists(file_dir=file_dir, mkdir=mkdir, mode="path")
-
-
-def exists_file(file_path, mkdir=False):
-    return exists(file_path=file_path, mkdir=mkdir, mode="file")
-
-
-def exists(file_path=None, file_dir=None, file_name=None, mode="file", mkdir=False):
-    """
-    文件或者目录是否存在，不存在是否需要新建
-    :param file_path: 文件路径
-    :param file_dir:  文件目录
-    :param file_name: 文件名称
-    :param mode:  file-文件，path-目录
-    :param mkdir: 目录不存在是否需要新建
-    :return: 是否存在
-    """
-
-    file_path = path_parse(file_path)
-    file_dir = path_parse(file_dir)
-
-    if mode == "file":
-        if file_path is not None:
-            file_dir, file_name = os.path.split(file_path)
-        elif file_dir is not None and file_name is not None:
-            file_path = os.path.join(file_dir, file_name)
-        else:
-            logger.warning("file_path or file_dir&file_name is needed")
-            return False
-
-        if os.path.exists(file_dir) and os.path.isdir(file_dir):
-            if os.path.exists(file_path) and os.path.isfile(file_path):
-                return True
-            else:
-                return False
-        elif not os.path.exists(file_dir) and mkdir:
-            makedirs(file_dir)
-        return False
-
-    elif mode == "path":
-        if file_path is not None:
-            file_dir, file_name = os.path.split(file_path)
-        elif file_dir is None:
-            logger.warning("file_path or file_dir is needed")
-            return False
-
-        if os.path.exists(file_dir) and os.path.isdir(file_dir):
-            return True
-        elif mkdir:
-            makedirs(file_dir)
-        return False
-
-    return False
-
-
-def exist_and_create(file_dir):
-    if os.path.exists(file_dir) and os.path.isdir(file_dir):
-        return
-
-    os.makedirs(file_dir)
-    return
-
-
-def _file_path(path):
-    return os.path.dirname(path)
-
-
-def _file_name(path):
+def _file_name(path: _Path) -> str:
     return os.path.basename(path)
 
 
-def makedirs(name, mode=0o777, exist_ok=False):
-    os.makedirs(name, mode=mode, exist_ok=exist_ok)
-
-
-def meta(file_dir, file_name=None, deep=1):
+def meta(
+    file_dir: _Path, file_name: _Path | None = None, deep: int = 1
+) -> dict[str, Any]:
     """
     返回文件的基本信息
     :param file_dir: 路径
@@ -142,12 +57,12 @@ def meta(file_dir, file_name=None, deep=1):
         "dir": file_dir,
         "name": file_name,
         "path": file_dir if file_name is None else os.path.join(file_dir, file_name),
-        "isdir": True if file_name is None else False,
+        "isdir": file_name is None,
         "deep": deep,
     }
 
 
-def list_file(file_dir, deep=1):
+def list_file(file_dir: _Path, deep: int = 1) -> list[dict[str, Any]]:
     """
     返回这个目录下所有的目录和文件，深度为deep
     :param file_dir: 路径
@@ -168,7 +83,13 @@ def list_file(file_dir, deep=1):
     return result
 
 
-def merge_file(source_file, target_file):
+def merge_file(source_file: Iterable[_Path], target_file: _Path) -> None:
+    """依次合并多个文本文件。
+
+    Args:
+        source_file: 源文件路径集合。
+        target_file: 合并后的文件路径。
+    """
     flag = 0  # 计数器
 
     info("开始。。。。。")
@@ -176,25 +97,31 @@ def merge_file(source_file, target_file):
     with open(target_file, "w+") as write_file:
         for file_path in source_file:
             with open(file_path, "r") as f_source:
-                for line in f_source:
-                    write_file.write(line)
+                write_file.writelines(f_source)
             write_file.write("\n")
 
     info("done " + str(flag) + "\t" + target_file)
     info("完成。。。。。")
 
 
-def split_file(source_file, target_dir, max_line=2000000):
+def split_file(source_file: _Path, target_dir: _Path, max_line: int = 2000000) -> None:
+    """按最大行数把文本文件拆分为多个 CSV 文件。
+
+    Args:
+        source_file: 源文件路径。
+        target_dir: 输出目录前缀。
+        max_line: 每个分卷的最大行数。
+    """
     file_name = _file_name(source_file)
     flag = 0  # 计数器
     name = 1  # 文件名
 
     info("开始。。。。。")
 
-    def get_filename():
+    def get_filename() -> str:
         return str(target_dir) + file_name + "-split-" + str(name) + ".csv"
 
-    write_file = open(get_filename(), "w+")
+    write_file = open(get_filename(), "w+")  # noqa: SIM115 - 分卷时需要动态轮换句柄
 
     with open(source_file, "r") as f_source:
         for line in f_source:
@@ -208,16 +135,27 @@ def split_file(source_file, target_dir, max_line=2000000):
                 flag = 0
 
                 write_file.close()
-                write_file = open(get_filename(), "w+")
+                write_file = open(get_filename(), "w+")  # noqa: SIM115 - 分卷时需要动态轮换句柄
     write_file.close()
     info("done " + str(flag) + "\t" + get_filename())
     info("完成。。。。。")
 
 
 class LocalPath:
-    """ """
+    """保存本地文件路径并提供基本文件操作。
 
-    def __init__(self, file_dir=None, file_name=None, file_path=None):
+    Args:
+        file_dir: 文件所在目录。
+        file_name: 文件名。
+        file_path: 完整文件路径，优先于目录和文件名。
+    """
+
+    def __init__(
+        self,
+        file_dir: _Path | None = None,
+        file_name: _Path | None = None,
+        file_path: _Path | None = None,
+    ) -> None:
         if file_path is not None:
             file_dir, file_name = os.path.split(file_path)
 
@@ -228,13 +166,16 @@ class LocalPath:
         self.file_name = file_name
         self.file_path = file_path
 
-    def make_dirs(self):
+    def make_dirs(self) -> None:
+        """创建保存的目录路径。"""
         os.makedirs(self.file_dir)
 
-    def exist(self):
+    def exist(self) -> bool:
+        """返回保存的文件路径是否存在。"""
         return os.path.exists(self.file_path)
 
-    def list_file(self, deep=1):
+    def list_file(self, deep: int = 1) -> list[dict[str, Any]]:
+        """返回目录下指定深度内的文件和目录元数据。"""
         result = []
         if deep <= 0:
             return result
@@ -248,16 +189,26 @@ class LocalPath:
 
         return result
 
-    def meta(self):
+    def meta(self) -> dict[str, Any]:
+        """返回当前路径的元数据。"""
         return self.to_json(self.file_name)
 
-    def to_json(self, file_name=None, deep=1):
+    def to_json(self, file_name: _Path | None = None, deep: int = 1) -> dict[str, Any]:
+        """把路径信息转换为字典。
+
+        Args:
+            file_name: 相对于保存目录的文件名。
+            deep: 当前遍历深度。
+
+        Returns:
+            路径元数据字典。
+        """
         return {
             "dir": self.file_dir,
             "name": file_name,
             "path": self.file_dir
             if file_name is None
             else os.path.join(self.file_dir, file_name),
-            "isdir": True if file_name is None else False,
+            "isdir": file_name is None,
             "deep": deep,
         }

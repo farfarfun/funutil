@@ -7,9 +7,10 @@ network/filesystem/cloud calls are avoided or isolated to tmp_path.
 """
 
 import importlib.metadata
+import subprocess
+import sys
 
 import pytest
-
 
 # ---------------------------------------------------------------------------
 # Imports: the top-level package and every "obviously public" submodule
@@ -61,18 +62,6 @@ def test_import_public_submodules(module_name):
     importlib.import_module(module_name)
 
 
-def test_paper_submodules_not_importable_here():
-    # funutil.paper.Paper / Paper2 execute real, unmocked network requests
-    # (web-of-knowledge / cnki scraping with expired, hardcoded cookies) at
-    # *module import time* -- there is no way to import them without firing
-    # a live HTTP request, so they are intentionally excluded from the smoke
-    # suite rather than mocked at import-time module-body granularity.
-    pytest.skip(
-        "funutil.paper.Paper/Paper2 在模块顶层直接发起真实网络请求（爬取网站，"
-        "使用过期的硬编码 cookie），无法安全 import，跳过"
-    )
-
-
 # ---------------------------------------------------------------------------
 # funutil.util.map: deep_get / find_get
 # ---------------------------------------------------------------------------
@@ -96,17 +85,14 @@ def test_deep_get_dict_path():
     assert deep_get(None, "a") is None
 
 
-def test_deep_get_integer_list_index_is_broken():
-    # KNOWN BUG: deep_get()'s loop body has two independent `if` statements
-    # instead of `if/elif`, so after a successful integer list-index step the
-    # second (str/dict) `if` always fails and its `else: return None` fires
-    # unconditionally. Any path that indexes into a list with an int always
-    # returns None instead of the element. Not fixed here (smoke-test scope
-    # only, no business-logic fixes).
-    pytest.skip(
-        "已知bug：deep_get 对路径中包含 list 整数下标的情况恒返回 None"
-        "（两个独立 if 而非 if/elif 导致的逻辑缺陷），不在本次冒烟测试修复范围内"
-    )
+def test_deep_get_list_indices_and_boundaries():
+    from funutil import deep_get
+
+    data = {"users": [{"name": "first"}, {"name": "last"}]}
+    assert deep_get(data, "users", 0, "name") == "first"
+    assert deep_get(data, "users", -1, "name") == "last"
+    assert deep_get(data, "users", 2) is None
+    assert deep_get(data, "users", -3) is None
 
 
 # ---------------------------------------------------------------------------
@@ -124,6 +110,13 @@ def test_get_logger_returns_usable_logger(tmp_path, monkeypatch):
 
     logger2 = getLogger("smoke_test_logger2")
     logger2.info("smoke test log message 2")
+
+
+def test_importing_log_module_has_no_filesystem_side_effect(tmp_path):
+    subprocess.run(
+        [sys.executable, "-c", "import funutil.util.log"], cwd=tmp_path, check=True
+    )
+    assert list(tmp_path.iterdir()) == []
 
 
 # ---------------------------------------------------------------------------
@@ -166,6 +159,13 @@ def test_run_timer_context_manager(tmp_path, monkeypatch):
     assert timer.counter == 1
 
 
+def test_run_timer_context_manager_does_not_swallow_errors():
+    from funutil import RunTimer
+
+    with pytest.raises(ValueError, match="boom"), RunTimer(dump_file=None):
+        raise ValueError("boom")
+
+
 # ---------------------------------------------------------------------------
 # funutil.util.retrying: Retry / retry
 # ---------------------------------------------------------------------------
@@ -194,7 +194,7 @@ def test_retry_raises_after_exhausting_attempts():
     def always_fails():
         raise ValueError("permanent failure")
 
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError, match="permanent failure"):
         always_fails()
 
 
@@ -219,19 +219,18 @@ def test_lru_cache_decorator_caches_results():
 
 
 def test_ttl_cache_decorator_basic_call():
-    # KNOWN BUG: funutil.cache.box.ttl_cache/vttl_cache call
-    # `cachebox.TTLCache(maxsize=maxsize, ttl=ttl)` / `VTTLCache(..., ttl=60)`,
-    # but the currently-installable cachebox (6.2.6) renamed that constructor
-    # kwarg to `global_ttl` -- so these two decorators raise
-    # `TypeError: TTLCache.__init__() got an unexpected keyword argument 'ttl'`
-    # against any modern cachebox release. This is an upstream-API-drift bug
-    # in funutil's source, not fixed here (smoke-test scope only, no
-    # business-logic fixes).
-    pytest.skip(
-        "已知bug：funutil.cache.box 的 ttl_cache/vttl_cache 调用 cachebox.TTLCache("
-        "ttl=...)，但当前可安装的 cachebox(6.2.6) 已将该参数改名为 global_ttl，"
-        "导致 TypeError，不在本次冒烟测试修复范围内"
-    )
+    from funutil.cache import ttl_cache
+
+    calls = []
+
+    @ttl_cache(maxsize=10, ttl=60)
+    def add(a, b):
+        calls.append((a, b))
+        return a + b
+
+    assert add(1, 2) == 3
+    assert add(1, 2) == 3
+    assert len(calls) == 1
 
 
 # ---------------------------------------------------------------------------
@@ -297,6 +296,24 @@ def test_list_file_and_removedirs(tmp_path):
     assert not sub.exists()
 
 
+def test_legacy_util_path_keeps_metadata_results(tmp_path, monkeypatch):
+    from funutil.util.path import join_path, list_file
+
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "a.txt").write_text("hello")
+
+    assert join_path("a.txt") == str(tmp_path / "a.txt")
+    assert list_file(tmp_path) == [
+        {
+            "dir": tmp_path,
+            "name": "a.txt",
+            "path": str(tmp_path / "a.txt"),
+            "isdir": False,
+            "deep": 1,
+        }
+    ]
+
+
 # ---------------------------------------------------------------------------
 # funutil.convert: convert_curl_to_python
 # ---------------------------------------------------------------------------
@@ -327,6 +344,9 @@ def test_convert_curl_to_python_basic():
         (4, False),
         (8, False),
         (9, False),
+        (1, False),
+        (0, False),
+        (-1, False),
     ],
 )
 def test_is_probable_prime(n, expected):
@@ -360,17 +380,11 @@ def test_worktime_with_int_input_does_not_raise():
     assert isinstance(result, bool)
 
 
-def test_worktime_default_and_string_input_is_broken():
-    # KNOWN BUG: util/time.py does `from datetime import datetime, timedelta` at
-    # module scope, but WorkTime.time_to_end() internally calls
-    # `datetime.datetime.now()` / `datetime.datetime.strptime(...)`, treating
-    # the already-imported *class* as if it were the `datetime` *module*. This
-    # raises AttributeError for the two most common call patterns: no
-    # time_str (defaults to None) and a string time_str. Only the int/float
-    # branch happens to work. Not fixed here (smoke-test scope only, no
-    # business-logic fixes).
-    pytest.skip(
-        "已知bug：WorkTime.time_to_end 对 time_str=None（默认值）或字符串输入会抛 "
-        "AttributeError（模块内误用 datetime.datetime，而 datetime 已经是类本身），"
-        "仅 int/float 输入可用，不在本次冒烟测试修复范围内"
-    )
+def test_worktime_default_string_and_cycle_boundary():
+    from funutil.util.time import WorkTime
+
+    wt = WorkTime()
+    assert isinstance(wt.time_to_day_end(), bool)
+    assert isinstance(wt.time_to_day_end("2025-01-01 00:00:00"), bool)
+    assert wt.time_to_end(55, circle_time=60, threshold_time=10) is True
+    assert wt.time_to_end(50, circle_time=60, threshold_time=10) is False

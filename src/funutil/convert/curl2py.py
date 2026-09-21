@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 source : https://github.com/spulec/uncurl
 """
@@ -8,6 +7,7 @@ import json
 import re
 import shlex
 from collections import OrderedDict, namedtuple
+from typing import Any
 
 from six.moves import http_cookies as Cookie
 
@@ -28,17 +28,21 @@ parser.add_argument("-U", "--proxy-user", default="")
 
 BASE_INDENT = " " * 4
 
+__all__ = ["convert_curl_to_python"]
+
 ParsedContext = namedtuple(
     "ParsedContext",
     ["method", "url", "data", "headers", "cookies", "verify", "auth", "proxy"],
 )
 
 
-def normalize_newlines(multiline_text):
+def normalize_newlines(multiline_text: str) -> str:
+    """把 curl 多行续行符转换为空格。"""
     return multiline_text.replace(" \\\n", " ")
 
 
-def parse_context(curl_command):
+def parse_context(curl_command: str) -> Any:
+    """解析 curl 命令并返回生成请求所需的上下文。"""
     tokens = shlex.split(normalize_newlines(curl_command))
     parsed_args = parser.parse_args(tokens)
     post_data = parsed_args.data or parsed_args.data_binary
@@ -100,7 +104,16 @@ def parse_context(curl_command):
     )
 
 
-def convert_curl_to_python(curl_command, **kwargs):
+def convert_curl_to_python(curl_command: str, **kwargs: Any) -> str:
+    """把 curl 命令转换为可执行的 requests 调用代码。
+
+    Args:
+        curl_command: 完整 curl 命令。
+        **kwargs: 附加到 requests 调用的关键字参数。
+
+    Returns:
+        Python requests 调用代码。
+    """
     parsed_context = parse_context(curl_command)
 
     data_token = ""
@@ -137,7 +150,8 @@ def convert_curl_to_python(curl_command, **kwargs):
 )""".format(**formatter)
 
 
-def dict_to_pretty_string(the_dict, indent=4):
+def dict_to_pretty_string(the_dict: dict[str, Any], indent: int = 4) -> str:
+    """把字典转换为适合嵌入生成代码的字符串。"""
     if not the_dict:
         return "{}"
 
