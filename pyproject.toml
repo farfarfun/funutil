@@ -4,7 +4,7 @@ version = "1.0.66"
 description = "轻量的 Python 通用工具库"
 readme = "README.md"
 requires-python = ">=3.10"
-dependencies = [ "farlog>=1.1.7", "cachebox>=6.2.6", "cachetools>=5.0.0", "diskcache>=5.0.0", "six>=1.16.0",]
+dependencies = [ "farcache>=2.0.3", "farlog>=1.1.7", "six>=1.16.0",]
 license = "MIT"
 license-files = ["LICENSE"]
 [[project.authors]]

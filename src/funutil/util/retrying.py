@@ -16,7 +16,8 @@ class Retry:
     Args:
         retry_cnt: 最大调用次数，必须大于零。
         sleep_after_retry: 每次失败后的等待秒数。
-        throw_error_after_retry: 耗尽次数后是否重新抛出原异常。
+        throw_error_after_retry: 已弃用的兼容参数；耗尽次数后始终抛出原异常。
+        retry_exceptions: 可重试的异常类型，默认为常见 I/O 异常。
     """
 
     def __init__(
@@ -24,6 +25,7 @@ class Retry:
         retry_cnt: int = 3,
         sleep_after_retry: float = 0,
         throw_error_after_retry: bool = True,
+        retry_exceptions: tuple[type[Exception], ...] = (OSError,),
         *args: Any,
         **kwargs: Any,
     ) -> None:
@@ -32,6 +34,7 @@ class Retry:
         self.retry_cnt = retry_cnt
         self.sleep_after_retry = sleep_after_retry
         self.throw_error_after_retry = throw_error_after_retry
+        self.retry_exceptions = retry_exceptions
 
     def __call__(self, func: Callable[..., Any]) -> Callable[..., Any]:
         @wraps(func)
@@ -39,15 +42,15 @@ class Retry:
             for step in range(self.retry_cnt):
                 try:
                     return func(*args, **kwargs)
-                except Exception as e:
+                except self.retry_exceptions as e:
                     logger.error(
                         f"Exception while retrying {step + 1}/{self.retry_cnt}: {e}"
                     )
-                    if self.sleep_after_retry > 0:
+                    if self.sleep_after_retry > 0 and step < self.retry_cnt - 1:
                         time.sleep(self.sleep_after_retry)
-                    if self.throw_error_after_retry and step == self.retry_cnt - 1:
+                    if step == self.retry_cnt - 1:
                         raise
-            return None
+            raise RuntimeError("重试循环未执行")
 
         return wrapper
 
@@ -56,6 +59,7 @@ def retry(
     retry_cnt: int = 3,
     sleep_after_retry: float = 0,
     throw_error_after_retry: bool = True,
+    retry_exceptions: tuple[type[Exception], ...] = (OSError,),
     *args: Any,
     **kwargs: Any,
 ) -> Retry:
@@ -64,11 +68,19 @@ def retry(
     Args:
         retry_cnt: 最大调用次数，必须大于零。
         sleep_after_retry: 每次失败后的等待秒数。
-        throw_error_after_retry: 耗尽次数后是否重新抛出原异常。
+        throw_error_after_retry: 已弃用的兼容参数；耗尽次数后始终抛出原异常。
+        retry_exceptions: 可重试的异常类型，默认为常见 I/O 异常。
         *args: 为兼容旧调用保留的扩展位置参数。
         **kwargs: 为兼容旧调用保留的扩展关键字参数。
 
     Returns:
         可用于装饰函数的重试对象。
     """
-    return Retry(retry_cnt, sleep_after_retry, throw_error_after_retry, *args, **kwargs)
+    return Retry(
+        retry_cnt,
+        sleep_after_retry,
+        throw_error_after_retry,
+        retry_exceptions,
+        *args,
+        **kwargs,
+    )

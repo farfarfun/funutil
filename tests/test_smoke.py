@@ -180,7 +180,7 @@ def test_retry_succeeds_after_transient_failures():
     def flaky():
         attempts["n"] += 1
         if attempts["n"] < 3:
-            raise ValueError("transient failure")
+            raise OSError("transient failure")
         return "ok"
 
     assert flaky() == "ok"
@@ -192,10 +192,36 @@ def test_retry_raises_after_exhausting_attempts():
 
     @retry(retry_cnt=2, sleep_after_retry=0, throw_error_after_retry=True)
     def always_fails():
-        raise ValueError("permanent failure")
+        raise OSError("permanent failure")
 
-    with pytest.raises(ValueError, match="permanent failure"):
+    with pytest.raises(OSError, match="permanent failure"):
         always_fails()
+
+
+def test_retry_only_catches_configured_exceptions():
+    from funutil.util.retrying import retry
+
+    attempts = {"n": 0}
+
+    @retry(retry_cnt=3, retry_exceptions=(OSError,))
+    def invalid_input():
+        attempts["n"] += 1
+        raise ValueError("invalid input")
+
+    with pytest.raises(ValueError, match="invalid input"):
+        invalid_input()
+    assert attempts["n"] == 1
+
+
+def test_retry_never_swallows_last_error():
+    from funutil.util.retrying import retry
+
+    @retry(retry_cnt=2, throw_error_after_retry=False)
+    def unavailable():
+        raise OSError("unavailable")
+
+    with pytest.raises(OSError, match="unavailable"):
+        unavailable()
 
 
 # ---------------------------------------------------------------------------
@@ -231,6 +257,31 @@ def test_ttl_cache_decorator_basic_call():
     assert add(1, 2) == 3
     assert add(1, 2) == 3
     assert len(calls) == 1
+
+
+@pytest.mark.parametrize(
+    "decorator_name",
+    ["cache", "fifo_cache", "lfu_cache", "lru_cache", "rr_cache", "ttl_cache", "vttl_cache"],
+)
+def test_public_memory_cache_decorators_cache_results(decorator_name):
+    import funutil.cache as cache_module
+
+    calls = []
+    decorator = getattr(cache_module, decorator_name)
+
+    def value(key):
+        calls.append(key)
+        return key
+
+    cached_value = decorator(value) if decorator_name == "cache" else decorator(maxsize=2)(value)
+    assert cached_value("key") == cached_value("key") == "key"
+    assert calls == ["key"]
+
+
+def test_legacy_cachetools_module_forwards_to_farcache():
+    from funutil.cache.tools import lru_cache
+
+    assert lru_cache.__module__ == "farcache.box"
 
 
 # ---------------------------------------------------------------------------
@@ -314,6 +365,23 @@ def test_legacy_util_path_keeps_metadata_results(tmp_path, monkeypatch):
     ]
 
 
+def test_merge_and_split_files(tmp_path):
+    from funutil.path.core import merge_file, split_file
+
+    first = tmp_path / "first.txt"
+    second = tmp_path / "second.txt"
+    merged = tmp_path / "merged.txt"
+    first.write_text("a\nb\n")
+    second.write_text("c\n")
+
+    merge_file([first, second], merged)
+    assert merged.read_text() == "a\nb\n\nc\n\n"
+
+    split_file(merged, str(tmp_path) + "/", max_line=2)
+    assert (tmp_path / "merged.txt-split-1.csv").read_text() == "a\nb\n"
+    assert (tmp_path / "merged.txt-split-2.csv").read_text() == "\nc\n"
+
+
 # ---------------------------------------------------------------------------
 # funutil.convert: convert_curl_to_python
 # ---------------------------------------------------------------------------
@@ -388,3 +456,34 @@ def test_worktime_default_string_and_cycle_boundary():
     assert isinstance(wt.time_to_day_end("2025-01-01 00:00:00"), bool)
     assert wt.time_to_end(55, circle_time=60, threshold_time=10) is True
     assert wt.time_to_end(50, circle_time=60, threshold_time=10) is False
+
+
+def test_date_ranges_have_inclusive_boundaries():
+    from datetime import timedelta
+
+    from funutil.util.time import day_during, month_during, week_during
+
+    day_first, day_last = day_during(0)
+    week_first, week_last = week_during(0)
+    offset, month_first, month_last = month_during(0)
+
+    assert day_last - day_first == timedelta(days=1, seconds=-1)
+    assert week_last - week_first == timedelta(weeks=1, seconds=-1)
+    assert month_last + timedelta(seconds=1) > month_first
+    assert offset == 0
+
+
+def test_repeating_timer_runs_until_cancelled():
+    from threading import Event
+
+    from funutil.time import RepeatingTimer
+
+    called = Event()
+    timer = RepeatingTimer(0.01, called.set)
+    timer.start()
+    try:
+        assert called.wait(1)
+    finally:
+        timer.cancel()
+        timer.join(timeout=1)
+    assert not timer.is_alive()

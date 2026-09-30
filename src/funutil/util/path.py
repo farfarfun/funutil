@@ -100,7 +100,7 @@ def merge_file(source_file: Iterable[_Path], target_file: _Path) -> None:
                 write_file.writelines(f_source)
             write_file.write("\n")
 
-    info("done " + str(flag) + "\t" + target_file)
+    info("done " + str(flag) + "\t" + str(target_file))
     info("完成。。。。。")
 
 

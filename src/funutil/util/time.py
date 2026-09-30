@@ -48,29 +48,69 @@ class WorkTime:
             return True
         return False
 
-    def time_to_day_end(self, *args, **kwargs) -> bool:
-        """判断时间是否接近一天结束。"""
-        return self.time_to_end(
-            *args, circle_time=_DAY_SECOND, threshold_time=60, **kwargs
-        )
+    def time_to_day_end(
+        self,
+        time_str: str | float | None = None,
+        format_str: str = "%Y-%m-%d %H:%M:%S",
+    ) -> bool:
+        """判断本地时间是否处于一天结束前 60 秒内。
 
-    def time_to_hour_end(self, *args, **kwargs) -> bool:
-        """判断时间是否接近一小时结束。"""
-        return self.time_to_end(
-            *args, circle_time=_HOUR_SECOND, threshold_time=60, **kwargs
-        )
+        Args:
+            time_str: 本地时间字符串或 Unix 时间戳；省略时使用当前时间。
+            format_str: 字符串时间的解析格式。
 
-    def time_to_ten_minute_end(self, *args, **kwargs) -> bool:
-        """判断时间是否接近十分钟周期结束。"""
-        return self.time_to_end(
-            *args, circle_time=_TEN_MINUTE_SECOND, threshold_time=30, **kwargs
-        )
+        Returns:
+            时间处于一天结束前 60 秒内时返回 ``True``。
+        """
+        return self.time_to_end(time_str, format_str, _DAY_SECOND, 60)
 
-    def time_to_minute_end(self, *args, **kwargs) -> bool:
-        """判断时间是否接近一分钟结束。"""
-        return self.time_to_end(
-            *args, circle_time=_MINUTE_SECOND, threshold_time=10, **kwargs
-        )
+    def time_to_hour_end(
+        self,
+        time_str: str | float | None = None,
+        format_str: str = "%Y-%m-%d %H:%M:%S",
+    ) -> bool:
+        """判断本地时间是否处于当前小时结束前 60 秒内。
+
+        Args:
+            time_str: 本地时间字符串或 Unix 时间戳；省略时使用当前时间。
+            format_str: 字符串时间的解析格式。
+
+        Returns:
+            时间处于当前小时结束前 60 秒内时返回 ``True``。
+        """
+        return self.time_to_end(time_str, format_str, _HOUR_SECOND, 60)
+
+    def time_to_ten_minute_end(
+        self,
+        time_str: str | float | None = None,
+        format_str: str = "%Y-%m-%d %H:%M:%S",
+    ) -> bool:
+        """判断本地时间是否处于十分钟周期结束前 30 秒内。
+
+        Args:
+            time_str: 本地时间字符串或 Unix 时间戳；省略时使用当前时间。
+            format_str: 字符串时间的解析格式。
+
+        Returns:
+            时间处于十分钟周期结束前 30 秒内时返回 ``True``。
+        """
+        return self.time_to_end(time_str, format_str, _TEN_MINUTE_SECOND, 30)
+
+    def time_to_minute_end(
+        self,
+        time_str: str | float | None = None,
+        format_str: str = "%Y-%m-%d %H:%M:%S",
+    ) -> bool:
+        """判断本地时间是否处于当前分钟结束前 10 秒内。
+
+        Args:
+            time_str: 本地时间字符串或 Unix 时间戳；省略时使用当前时间。
+            format_str: 字符串时间的解析格式。
+
+        Returns:
+            时间处于当前分钟结束前 10 秒内时返回 ``True``。
+        """
+        return self.time_to_end(time_str, format_str, _MINUTE_SECOND, 10)
 
     def test(self) -> None:
         """执行各周期判断的基本调用检查。"""
@@ -90,29 +130,38 @@ class WorkTime:
 
 
 def now2unix() -> int:
-    """
-    当前时间戳
-    :return:
+    """返回当前本地时间对应的 Unix 时间戳。
+
+    Returns:
+        精确到秒的 Unix 时间戳。
     """
     return int(time.mktime(time.localtime()))
 
 
 def now2time(time_type: str = "%Y-%m-%d %H:%M:%S") -> str:
-    """
-    当前时间
-    :return:
+    """按指定格式返回当前本地时间。
+
+    Args:
+        time_type: ``time.strftime`` 使用的输出格式。
+
+    Returns:
+        格式化后的当前本地时间字符串。
     """
     return time.strftime(time_type, time.localtime())
 
 
 def time2unix(time_str: str, time_type: str = "%Y-%m-%d %H:%M:%S") -> int:
-    """
-    > str2unix('2013-10-10 23:40:00')
+    """把本地时间字符串转换为 Unix 时间戳。
 
-    '2013-10-10 23:40:00'
-    :param time_str:
-    :param time_type: '%Y-%m-%d %H:%M:%S'
-    :return:
+    Args:
+        time_str: 待解析的本地时间字符串。
+        time_type: ``time.strptime`` 使用的输入格式。
+
+    Returns:
+        精确到秒的 Unix 时间戳。
+
+    Raises:
+        ValueError: ``time_str`` 与 ``time_type`` 不匹配。
     """
     return int(time.mktime(time.strptime(time_str, time_type)))
 
