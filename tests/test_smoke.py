@@ -6,6 +6,7 @@ catch import breakage and gross regressions in the public API surface. Any real
 network/filesystem/cloud calls are avoided or isolated to tmp_path.
 """
 
+import ast
 import importlib.metadata
 import subprocess
 import sys
@@ -224,6 +225,26 @@ def test_retry_never_swallows_last_error():
         unavailable()
 
 
+def test_retry_warns_when_deprecated_param_passed_explicitly():
+    from funutil.util.retrying import retry
+
+    with pytest.warns(DeprecationWarning, match="throw_error_after_retry"):
+        retry(retry_cnt=1, throw_error_after_retry=False)
+
+    with pytest.warns(DeprecationWarning, match="throw_error_after_retry"):
+        retry(retry_cnt=1, throw_error_after_retry=True)
+
+
+def test_retry_omitting_deprecated_param_does_not_warn():
+    import warnings
+
+    from funutil.util.retrying import retry
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        retry(retry_cnt=1)
+
+
 # ---------------------------------------------------------------------------
 # funutil.cache: in-memory decorators (cachebox-backed)
 # ---------------------------------------------------------------------------
@@ -395,6 +416,34 @@ def test_convert_curl_to_python_basic():
 
     assert "requests.get(" in result
     assert "https://example.com/api" in result
+
+
+def test_convert_curl_to_python_escapes_quotes_in_literals():
+    """data/url 中的引号与反斜杠必须被转义为合法 Python 字面量，不能破坏生成代码。"""
+    from funutil.convert import convert_curl_to_python
+
+    curl_cmd = (
+        'curl "https://example.com/api" -X POST '
+        '-d "name=O\'Brien \\"hi\\"" '
+        '-H "Content-Type: application/json"'
+    )
+    result = convert_curl_to_python(curl_cmd)
+
+    # 生成的代码必须是合法 Python，能被编译（即便不执行）
+    compile(result, "<generated>", "exec")
+    # data 字面量经 repr() 转义后能还原出原始值，而不是被引号截断/破坏语法
+    data_line = next(line for line in result.splitlines() if "data=" in line)
+    data_literal = data_line.strip().removeprefix("data=").rstrip(",")
+    assert ast.literal_eval(data_literal) == 'name=O\'Brien "hi"'
+
+
+def test_convert_curl_to_python_rejects_unknown_method():
+    """`-X` 指定的方法必须落在白名单内，否则不能拼进可执行代码字符串。"""
+    from funutil.convert import convert_curl_to_python
+
+    curl_cmd = 'curl "https://example.com" -X "get); import os; os.system(\'x\'); ("'
+    with pytest.raises(ValueError, match="不支持的 HTTP 方法"):
+        convert_curl_to_python(curl_cmd)
 
 
 # ---------------------------------------------------------------------------

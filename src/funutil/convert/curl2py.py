@@ -28,6 +28,8 @@ parser.add_argument("-U", "--proxy-user", default="")
 
 BASE_INDENT = " " * 4
 
+_ALLOWED_METHODS = {"get", "post", "put", "patch", "delete", "head", "options"}
+
 __all__ = ["convert_curl_to_python"]
 
 ParsedContext = namedtuple(
@@ -113,12 +115,22 @@ def convert_curl_to_python(curl_command: str, **kwargs: Any) -> str:
 
     Returns:
         Python requests 调用代码。
+
+    Raises:
+        ValueError: ``curl_command`` 中的 HTTP 方法不在允许的白名单内。
     """
     parsed_context = parse_context(curl_command)
 
+    method = parsed_context.method.lower()
+    if method not in _ALLOWED_METHODS:
+        raise ValueError(
+            f"不支持的 HTTP 方法 {parsed_context.method!r}，"
+            f"仅支持 {sorted(_ALLOWED_METHODS)}"
+        )
+
     data_token = ""
     if parsed_context.data:
-        data_token = f"{BASE_INDENT}data='{parsed_context.data}',\n"
+        data_token = f"{BASE_INDENT}data={parsed_context.data!r},\n"
 
     verify_token = ""
     if parsed_context.verify:
@@ -126,13 +138,13 @@ def convert_curl_to_python(curl_command: str, **kwargs: Any) -> str:
 
     requests_kwargs = ""
     for k, v in sorted(kwargs.items()):
-        requests_kwargs += f"{BASE_INDENT}{k}={v},\n"
+        requests_kwargs += f"{BASE_INDENT}{k}={v!r},\n"
 
-    auth_data = f"{BASE_INDENT}auth={parsed_context.auth}"
-    proxy_data = f"\n{BASE_INDENT}proxies={parsed_context.proxy}"
+    auth_data = f"{BASE_INDENT}auth={parsed_context.auth!r}"
+    proxy_data = f"\n{BASE_INDENT}proxies={parsed_context.proxy!r}"
 
     formatter = {
-        "method": parsed_context.method,
+        "method": method,
         "url": parsed_context.url,
         "data_token": data_token,
         "headers_token": f"{BASE_INDENT}headers={dict_to_pretty_string(parsed_context.headers)}",
@@ -143,7 +155,7 @@ def convert_curl_to_python(curl_command: str, **kwargs: Any) -> str:
         "proxies": proxy_data,
     }
 
-    return """requests.{method}("{url}",
+    return """requests.{method}({url!r},
 {requests_kwargs}{data_token}{headers_token},
 {cookies_token},
 {auth},{proxies},{security_token}

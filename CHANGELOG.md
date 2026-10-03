@@ -1,5 +1,20 @@
 # 更新日志
 
+## 未发布
+
+### 修复
+
+- `convert_curl_to_python` 生成代码时对 URL、请求体与自定义关键字参数统一使用
+  `repr()` 转义，避免 curl 输入中的引号/转义符破坏生成代码的语法甚至被注入任意代码；
+  `-X` 指定的 HTTP 方法改为白名单校验，非法方法直接抛出 `ValueError`。
+
+### 变更
+
+- `Retry`/`retry` 的 `throw_error_after_retry` 参数已不影响行为（耗尽重试后始终
+  抛出原异常），显式传参会触发 `DeprecationWarning`，计划在下一个次版本中移除，
+  请直接删除该参数。
+- `.gitignore` 补充 `*.db`、`*.rar`、`.run/`、`logs/`、`.idea/`、`.vscode/`。
+
 ## 1.0.66 - 2026-09-21
 
 ### 新增

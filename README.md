@@ -17,6 +17,20 @@ data = {"users": [{"name": "farfarfun"}]}
 print(deep_get(data, "users", 0, "name"))
 ```
 
+## 重试装饰器
+
+```python
+from funutil.util.retrying import retry
+
+
+@retry(retry_cnt=3, sleep_after_retry=1, retry_exceptions=(OSError,))
+def call_remote(): ...
+```
+
+`retry_exceptions` 用于限定只重试指定类型的异常；重试次数耗尽后始终重新抛出原始
+异常。`throw_error_after_retry` 参数已弃用且不再影响行为，显式传参会触发
+`DeprecationWarning`，计划在下一个次版本中移除，请直接删除该参数。
+
 ---
 
 ## 关于 farfarfun

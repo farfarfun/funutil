@@ -1,4 +1,5 @@
 import time
+import warnings
 from collections.abc import Callable
 from functools import wraps
 from typing import Any
@@ -9,6 +10,8 @@ logger = getLogger("funutil")
 
 __all__ = ["Retry", "retry"]
 
+_UNSET = object()
+
 
 class Retry:
     """在函数失败时按指定次数重试。
@@ -16,7 +19,9 @@ class Retry:
     Args:
         retry_cnt: 最大调用次数，必须大于零。
         sleep_after_retry: 每次失败后的等待秒数。
-        throw_error_after_retry: 已弃用的兼容参数；耗尽次数后始终抛出原异常。
+        throw_error_after_retry: 已弃用的兼容参数，耗尽次数后始终抛出原异常，
+            传入该参数不再改变行为；计划在下一个次版本中移除，显式传参会触发
+            ``DeprecationWarning``。
         retry_exceptions: 可重试的异常类型，默认为常见 I/O 异常。
     """
 
@@ -24,13 +29,22 @@ class Retry:
         self,
         retry_cnt: int = 3,
         sleep_after_retry: float = 0,
-        throw_error_after_retry: bool = True,
+        throw_error_after_retry: Any = _UNSET,
         retry_exceptions: tuple[type[Exception], ...] = (OSError,),
         *args: Any,
         **kwargs: Any,
     ) -> None:
         if retry_cnt < 1:
             raise ValueError("retry_cnt 必须大于零")
+        if throw_error_after_retry is _UNSET:
+            throw_error_after_retry = True
+        else:
+            warnings.warn(
+                "throw_error_after_retry 已弃用且不再影响行为（耗尽重试后始终抛出"
+                "原异常），将在下一个次版本中移除，请移除该参数。",
+                DeprecationWarning,
+                stacklevel=2,
+            )
         self.retry_cnt = retry_cnt
         self.sleep_after_retry = sleep_after_retry
         self.throw_error_after_retry = throw_error_after_retry
@@ -58,7 +72,7 @@ class Retry:
 def retry(
     retry_cnt: int = 3,
     sleep_after_retry: float = 0,
-    throw_error_after_retry: bool = True,
+    throw_error_after_retry: Any = _UNSET,
     retry_exceptions: tuple[type[Exception], ...] = (OSError,),
     *args: Any,
     **kwargs: Any,
@@ -68,7 +82,9 @@ def retry(
     Args:
         retry_cnt: 最大调用次数，必须大于零。
         sleep_after_retry: 每次失败后的等待秒数。
-        throw_error_after_retry: 已弃用的兼容参数；耗尽次数后始终抛出原异常。
+        throw_error_after_retry: 已弃用的兼容参数，耗尽次数后始终抛出原异常，
+            传入该参数不再改变行为；计划在下一个次版本中移除，显式传参会触发
+            ``DeprecationWarning``。
         retry_exceptions: 可重试的异常类型，默认为常见 I/O 异常。
         *args: 为兼容旧调用保留的扩展位置参数。
         **kwargs: 为兼容旧调用保留的扩展关键字参数。
