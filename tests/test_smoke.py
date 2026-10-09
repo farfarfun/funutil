@@ -1,9 +1,8 @@
-"""Lightweight smoke tests for funutil.
+"""funutil 的轻量级冒烟测试。
 
-funutil is a small general-purpose utility library (logging helper, decorators,
-caches, misc helpers). These tests are not exhaustive unit tests; they exist to
-catch import breakage and gross regressions in the public API surface. Any real
-network/filesystem/cloud calls are avoided or isolated to tmp_path.
+funutil 是一个小型通用工具库，包含日志辅助、装饰器、缓存等功能。本文件不是完整的
+单元测试集，主要用于捕获公共 API 的导入失败和明显回归。真实的网络、文件系统和云端
+调用均会避免执行或隔离至 ``tmp_path``。
 """
 
 import ast
@@ -14,8 +13,7 @@ import sys
 import pytest
 
 # ---------------------------------------------------------------------------
-# Imports: the top-level package and every "obviously public" submodule
-# should import cleanly with no ImportError.
+# 顶层包及每个明显公开的子模块都应能正常导入，且不抛出 ImportError。
 # ---------------------------------------------------------------------------
 
 
@@ -64,7 +62,7 @@ def test_import_public_submodules(module_name):
 
 
 # ---------------------------------------------------------------------------
-# funutil.util.map: deep_get / find_get
+# funutil.util.map：deep_get / find_get
 # ---------------------------------------------------------------------------
 
 
@@ -97,7 +95,7 @@ def test_deep_get_list_indices_and_boundaries():
 
 
 # ---------------------------------------------------------------------------
-# funutil.util.log / top-level get_logger
+# funutil.util.log / 顶层 get_logger
 # ---------------------------------------------------------------------------
 
 
@@ -132,7 +130,7 @@ def test_get_package_version_matches_installed_metadata():
 
 
 # ---------------------------------------------------------------------------
-# funutil.RunTimer / run_timer decorator
+# funutil.RunTimer / run_timer 装饰器
 # ---------------------------------------------------------------------------
 
 
@@ -168,7 +166,7 @@ def test_run_timer_context_manager_does_not_swallow_errors():
 
 
 # ---------------------------------------------------------------------------
-# funutil.util.retrying: Retry / retry
+# funutil.util.retrying：Retry / retry
 # ---------------------------------------------------------------------------
 
 
@@ -246,7 +244,7 @@ def test_retry_omitting_deprecated_param_does_not_warn():
 
 
 # ---------------------------------------------------------------------------
-# funutil.cache: in-memory decorators (cachebox-backed)
+# funutil.cache：内存缓存装饰器（基于 cachebox）
 # ---------------------------------------------------------------------------
 
 
@@ -306,7 +304,7 @@ def test_legacy_cachetools_module_forwards_to_farcache():
 
 
 # ---------------------------------------------------------------------------
-# funutil.cache: PickleCache / pkl_cache (disk-pickle-backed)
+# funutil.cache：PickleCache / pkl_cache（基于磁盘 pickle）
 # ---------------------------------------------------------------------------
 
 
@@ -328,7 +326,7 @@ def test_pkl_cache_hits_on_second_call(tmp_path):
 
 
 # ---------------------------------------------------------------------------
-# funutil.cache: DiskCache / disk_cache (diskcache-backed)
+# funutil.cache：DiskCache / disk_cache（基于 diskcache）
 # ---------------------------------------------------------------------------
 
 
@@ -350,7 +348,7 @@ def test_disk_cache_hits_on_second_call(tmp_path):
 
 
 # ---------------------------------------------------------------------------
-# funutil.path: list_file / removedirs
+# funutil.path：list_file / removedirs
 # ---------------------------------------------------------------------------
 
 
@@ -404,7 +402,7 @@ def test_merge_and_split_files(tmp_path):
 
 
 # ---------------------------------------------------------------------------
-# funutil.convert: convert_curl_to_python
+# funutil.convert：convert_curl_to_python
 # ---------------------------------------------------------------------------
 
 
@@ -446,8 +444,17 @@ def test_convert_curl_to_python_rejects_unknown_method():
         convert_curl_to_python(curl_cmd)
 
 
+@pytest.mark.parametrize("parameter_name", ["not-valid", "class"])
+def test_convert_curl_to_python_rejects_unsafe_keyword_name(parameter_name):
+    """展开参数名必须能安全地作为生成调用的关键字参数。"""
+    from funutil.convert import convert_curl_to_python
+
+    with pytest.raises(ValueError, match="不合法的 requests 参数名"):
+        convert_curl_to_python('curl "https://example.com"', **{parameter_name: 1})
+
+
 # ---------------------------------------------------------------------------
-# funutil.math.prime: is_probable_prime
+# funutil.math.prime：is_probable_prime
 # ---------------------------------------------------------------------------
 
 
@@ -473,7 +480,7 @@ def test_is_probable_prime(n, expected):
 
 
 # ---------------------------------------------------------------------------
-# funutil.util.time: date/time helpers
+# funutil.util.time：日期和时间辅助函数
 # ---------------------------------------------------------------------------
 
 

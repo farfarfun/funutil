@@ -1,9 +1,12 @@
-"""
-source : https://github.com/spulec/uncurl
+"""curl 命令转换功能改编自 spulec/uncurl。
+
+上游项目版权归 Steve Pulec（2012），使用 Apache-2.0 协议。本文件已修改；
+完整上游许可证见 ``THIRD_PARTY_LICENSES/uncurl-LICENSE``。
 """
 
 import argparse
 import json
+import keyword
 import re
 import shlex
 from collections import OrderedDict, namedtuple
@@ -75,14 +78,13 @@ def parse_context(curl_command: str) -> Any:
         else:
             quoted_headers[header_key] = header_value.strip()
 
-    # add auth
+    # 添加认证信息。
     user = parsed_args.user
     if parsed_args.user:
         user = tuple(user.split(":"))
 
-    # add proxy and its authentication if it's available.
+    # 添加代理及其认证信息。
     proxies = parsed_args.proxy
-    # proxy_auth = parsed_args.proxy_user
     if parsed_args.proxy and parsed_args.proxy_user:
         proxies = {
             "http": f"http://{parsed_args.proxy_user}@{parsed_args.proxy}/",
@@ -117,7 +119,7 @@ def convert_curl_to_python(curl_command: str, **kwargs: Any) -> str:
         Python requests 调用代码。
 
     Raises:
-        ValueError: ``curl_command`` 中的 HTTP 方法不在允许的白名单内。
+        ValueError: HTTP 方法不在白名单内，或附加参数名不能安全嵌入生成代码。
     """
     parsed_context = parse_context(curl_command)
 
@@ -138,6 +140,8 @@ def convert_curl_to_python(curl_command: str, **kwargs: Any) -> str:
 
     requests_kwargs = ""
     for k, v in sorted(kwargs.items()):
+        if not k.isidentifier() or keyword.iskeyword(k):
+            raise ValueError(f"不合法的 requests 参数名: {k!r}")
         requests_kwargs += f"{BASE_INDENT}{k}={v!r},\n"
 
     auth_data = f"{BASE_INDENT}auth={parsed_context.auth!r}"
