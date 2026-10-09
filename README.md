@@ -31,6 +31,13 @@ def call_remote(): ...
 异常。`throw_error_after_retry` 参数已弃用且不再影响行为，显式传参会触发
 `DeprecationWarning`，计划在下一个次版本中移除，请直接删除该参数。
 
+## 第三方代码声明
+
+`src/funutil/convert/curl2py.py` 改编自
+[spulec/uncurl](https://github.com/spulec/uncurl)，原项目版权归 Steve Pulec（2012），
+使用 [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)。完整上游许可证
+与版权声明保存在 `THIRD_PARTY_LICENSES/uncurl-LICENSE`；该文件已在本项目中修改。
+
 ---
 
 ## 关于 farfarfun
