@@ -3,7 +3,7 @@ name = "funutil"
 version = "1.0.66"
 description = "轻量的 Python 通用工具库"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 dependencies = [ "farcache>=2.0.3", "farlog>=1.1.7", "six>=1.16.0",]
 license = "MIT"
 license-files = ["LICENSE"]
